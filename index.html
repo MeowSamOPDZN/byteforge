@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ByteForge — Private Tools</title>
 <meta name="description" content="ByteForge — a private, invite-only arsenal of tools.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 65'%3E%3Cpath fill='white' d='M37.9 0 0 65h75.8z'/%3E%3C/svg%3E">
+<link rel="icon" href="logo.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -39,6 +39,12 @@ a{color:inherit}
 .nav-inner{max-width:1120px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:14px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;font-size:17px;color:#fff;text-decoration:none}
 .brand svg{width:23px;height:20px;fill:#fff;display:block}
+.logo-img{display:block;object-fit:contain;border-radius:8px}
+.brand .logo-img{width:30px;height:30px}
+.hero-mark .logo-img{width:38px;height:38px;border-radius:10px}
+.gate-mark .logo-img{width:32px;height:32px;border-radius:9px}
+.empty .logo-img{width:52px;height:52px;opacity:.55;margin:0 auto 22px}
+.logo-dim{filter:saturate(.9)}
 .nav-badge{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#000;background:#fff;border-radius:999px;padding:3px 10px;font-weight:700}
 .sess{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim);border:1px solid var(--border);border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
 .sess .pulse{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80;animation:pulse 2s infinite}
@@ -148,6 +154,72 @@ td.mono,.mono{font-family:var(--mono)}
 .hint{font-size:12.5px;color:var(--faint);margin-top:10px;line-height:1.6}
 .log-filter{max-width:320px;margin-bottom:16px}
 .countdown{font-family:var(--mono);font-size:13px;color:var(--dim)}
+/* ---------- tool detail page ---------- */
+.tool-wrap{max-width:920px;margin:0 auto;padding:44px 24px 90px;position:relative;z-index:1}
+.back-link{display:inline-flex;align-items:center;gap:8px;color:var(--dim);font-size:14px;text-decoration:none;margin-bottom:28px;transition:color .18s}
+.back-link:hover{color:#fff}
+.back-link svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.tdp-hero{border-radius:22px;overflow:hidden;border:1px solid var(--border);background:linear-gradient(165deg,rgba(255,255,255,.07),rgba(255,255,255,.02));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);position:relative}
+.tdp-hero::after{content:"";position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent)}
+.tdp-cover{width:100%;max-height:380px;object-fit:cover;display:block;border-bottom:1px solid var(--border)}
+.tdp-body{padding:36px}
+.tdp-body h1{font-size:38px;letter-spacing:-.035em;margin:14px 0 12px}
+.tdp-body .desc{color:var(--dim);font-size:16px;line-height:1.7;max-width:640px}
+.tdp-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tdp-actions{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.gallery{margin-top:34px}
+.gallery h3{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:14px;font-weight:600}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.g-grid img{width:100%;height:140px;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:zoom-in;transition:transform .2s,border-color .2s}
+.g-grid img:hover{transform:scale(1.03);border-color:rgba(255,255,255,.3)}
+.lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:30px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;border-radius:14px;border:1px solid var(--border);box-shadow:0 30px 100px rgba(0,0,0,.8)}
+.card-cover{margin:-28px -28px 20px;height:150px;overflow:hidden;border-radius:18px 18px 0 0;border-bottom:1px solid var(--border)}
+.card-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.card:hover .card-cover img{transform:scale(1.05)}
+.card-imgs{color:var(--faint);font-weight:400}
+
+/* ---------- AI widget ---------- */
+.ai-fab{position:fixed;right:26px;bottom:26px;z-index:90;width:60px;height:60px;border-radius:50%;background:#fff;color:#000;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px rgba(255,255,255,.18);transition:transform .2s}
+.ai-fab:hover{transform:scale(1.08)}
+.ai-fab svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2}
+.ai-fab .exp{position:absolute;top:-6px;right:-6px;background:#7c5cff;color:#fff;font-size:9px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:999px;text-transform:uppercase}
+.ai-panel{position:fixed;right:26px;bottom:100px;z-index:95;width:min(400px,calc(100vw - 40px));height:520px;max-height:calc(100vh - 140px);border-radius:20px;background:rgba(12,12,14,.92);border:1px solid var(--border);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);box-shadow:0 30px 90px rgba(0,0,0,.75);display:flex;flex-direction:column;overflow:hidden}
+.ai-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.ai-head .logo-img{width:26px;height:26px}
+.ai-head b{font-size:15px;letter-spacing:-.01em}
+.ai-head .exp{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b9a8ff;border:1px solid rgba(124,92,255,.5);padding:3px 8px;border-radius:999px}
+.ai-head button{margin-left:auto;background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;line-height:1}
+.ai-head button:hover{color:#fff}
+.ai-left{font-size:11.5px;color:var(--faint);padding:8px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
+.ai-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.ai-msg{max-width:85%;padding:11px 15px;border-radius:14px;font-size:14px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
+.ai-msg.user{align-self:flex-end;background:#fff;color:#000;border-bottom-right-radius:5px}
+.ai-msg.bot{align-self:flex-start;background:rgba(255,255,255,.07);border:1px solid var(--border);border-bottom-left-radius:5px}
+.ai-msg.typing{color:var(--dim);font-style:italic}
+.ai-input{display:flex;gap:10px;padding:14px;border-top:1px solid var(--border)}
+.ai-input input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:11px;color:#fff;padding:11px 14px;font-size:14px;outline:none}
+.ai-input input:focus{border-color:rgba(255,255,255,.35)}
+.ai-input button{background:#fff;color:#000;border:none;border-radius:11px;padding:0 18px;font-weight:600;cursor:pointer;font-size:14px}
+.ai-input button:disabled{opacity:.5}
+.ai-off{padding:40px 26px;text-align:center;color:var(--dim);font-size:14px;line-height:1.7}
+
+/* ---------- switch ---------- */
+.switch{position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;cursor:pointer;background:rgba(255,255,255,.12);border:1px solid var(--border);border-radius:999px;transition:.2s}
+.switch .sl::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#888;border-radius:50%;transition:.2s}
+.switch input:checked + .sl{background:rgba(124,92,255,.35);border-color:rgba(124,92,255,.7)}
+.switch input:checked + .sl::before{transform:translateX(22px);background:#fff;box-shadow:0 0 12px rgba(124,92,255,.9)}
+.switch-row{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.switch-row b{font-size:16px}
+.switch-row .tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b9a8ff;border:1px solid rgba(124,92,255,.5);padding:3px 9px;border-radius:999px}
+.switch-row small{display:block;color:var(--faint);font-size:12.5px;margin-top:4px;font-weight:400}
+
+.kv-ok,.kv-warn{border-radius:12px;padding:13px 17px;font-size:13.5px;margin:22px 0 0;border:1px solid var(--border);backdrop-filter:blur(14px)}
+.kv-ok{background:rgba(74,222,128,.07);color:#b9f5d0}
+.kv-warn{background:rgba(255,150,80,.07);color:#ffd9b8}
+
 [hidden]{display:none!important}
 
 @media(max-width:640px){
@@ -167,10 +239,10 @@ td.mono,.mono{font-family:var(--mono)}
 <div id="gate" class="gate-wrap" hidden>
   <div class="gate">
     <div class="gate-mark">
-      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      <img src="logo.png" class="logo-img" alt="ByteForge">
     </div>
-    <h2>Enter access code</h2>
-    <p class="muted">ByteForge is private. Paste the single-use code the owner gave you to step inside.</p>
+    <h2 id="gateTitle">Enter access code</h2>
+    <p class="muted" id="gateSub">ByteForge is private. Paste the single-use code the owner gave you to step inside.</p>
     <input id="gateInput" placeholder="XXXX-XXXX" maxlength="17" autocomplete="off" spellcheck="false">
     <button class="btn btn-primary" id="gateBtn" style="width:100%;margin-top:14px">Unlock ByteForge</button>
     <div class="gate-err" id="gateErr"></div>
@@ -182,17 +254,18 @@ td.mono,.mono{font-family:var(--mono)}
 <div id="app" hidden>
   <nav class="nav"><div class="nav-inner">
     <a class="brand" href="/">
-      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      <img src="logo.png" class="logo-img" alt="ByteForge">
       ByteForge
     </a>
     <div style="flex:1"></div>
     <span id="sessBadge" class="sess" title="Your session stays alive while you're active. 20 minutes away and you'll need a fresh code."><span class="pulse"></span><span class="name" id="sessName">Guest</span></span>
+    <a class="btn btn-ghost btn-sm" id="adminBtn" href="/adminp" hidden>Admin</a>
     <button class="btn btn-ghost btn-sm" id="lockBtn">Lock</button>
   </div></nav>
 
   <header class="hero">
     <div class="hero-mark">
-      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      <img src="logo.png" class="logo-img" alt="ByteForge">
     </div>
     <h1>ByteForge</h1>
     <p>A private arsenal of tools — forged in the dark, sharpened for speed. Invite-only, always.</p>
@@ -203,25 +276,87 @@ td.mono,.mono{font-family:var(--mono)}
   <main class="grid" id="grid"></main>
 
   <div id="empty" class="empty" hidden>
-    <svg viewBox="0 0 76 65"><path d="M37.9 4 4 61h67.8z"/></svg>
+    <img src="logo.png" class="logo-img logo-dim" alt="ByteForge">
     <h2>Nothing forged yet</h2>
     <p>The owner hasn't added any tools to this category.<br>Check back soon — or ask for a different shelf.</p>
   </div>
 
   <footer class="footer">
     <a class="brand" href="/">
-      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      <img src="logo.png" class="logo-img" alt="ByteForge">
       ByteForge
     </a>
     <div>© 2026 ByteForge · Private by design</div>
   </footer>
 </div>
 
+<!-- ==================== TOOL DETAIL PAGE ==================== -->
+<div id="tool" hidden>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/">
+      <img src="logo.png" class="logo-img" alt="ByteForge">
+      ByteForge
+    </a>
+    <div style="flex:1"></div>
+    <a class="btn btn-ghost btn-sm" href="/">All tools</a>
+  </div></nav>
+  <div class="tool-wrap">
+    <a class="back-link" href="/"><svg viewBox="0 0 24 24"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>Back to tools</a>
+    <div class="tdp-hero">
+      <img id="tdpCover" class="tdp-cover" hidden alt="">
+      <div class="tdp-body">
+        <div class="tdp-meta">
+          <div class="card-icon" id="tdpIcon" style="margin:0"></div>
+          <span class="card-cat" id="tdpCat"></span>
+        </div>
+        <h1 id="tdpName"></h1>
+        <p class="desc" id="tdpDesc"></p>
+        <div class="tdp-actions">
+          <a class="btn btn-primary" id="tdpOpen" target="_blank" rel="noopener">Open tool
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2"><path d="M7 17L17 7M7 7h10v10"/></svg></a>
+          <button class="btn btn-ghost" id="tdpCopy">Copy link</button>
+        </div>
+        <div class="gallery" id="tdpGallery" hidden>
+          <h3>Images library</h3>
+          <div class="g-grid" id="tdpGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">
+    <a class="brand" href="/">
+      <img src="logo.png" class="logo-img" alt="ByteForge" style="width:18px;height:18px">
+      ByteForge
+    </a>
+    <div>© 2026 ByteForge · Private by design</div>
+  </footer>
+</div>
+<div class="lightbox" id="lightbox" hidden><img id="lightboxImg" alt=""></div>
+
+<!-- ==================== AI WIDGET ==================== -->
+<button class="ai-fab" id="aiFab" hidden title="Chat with ByteForge AI">
+  <span class="exp">exp</span>
+  <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5L19 19M19 5l-2.5 2.5M7.5 16.5L5 19"/><circle cx="12" cy="12" r="3.2"/></svg>
+</button>
+<div class="ai-panel" id="aiPanel" hidden>
+  <div class="ai-head">
+    <img src="logo.png" class="logo-img" alt="">
+    <b>ByteForge AI</b><span class="exp">experimental</span>
+    <button id="aiClose" title="Close">×</button>
+  </div>
+  <div class="ai-left" id="aiLeft"></div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-input">
+    <input id="aiText" placeholder="Ask anything…" maxlength="2000" autocomplete="off">
+    <button id="aiSend">Send</button>
+  </div>
+</div>
+
 <!-- ==================== ADMIN PANEL ==================== -->
 <div id="admin" hidden>
   <nav class="nav"><div class="nav-inner">
     <a class="brand" href="/adminp">
-      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      <img src="logo.png" class="logo-img" alt="ByteForge">
       ByteForge
     </a>
     <span class="nav-badge">Admin</span>
@@ -230,24 +365,6 @@ td.mono,.mono{font-family:var(--mono)}
   </div></nav>
 
   <div class="admin-wrap">
-    <!-- PIN gate -->
-    <div id="pinGate" class="pin-wrap">
-      <div class="panel" style="width:100%;max-width:430px;margin:0">
-        <div style="text-align:center">
-          <div class="gate-mark" style="margin-bottom:20px">
-            <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
-          </div>
-          <h3 id="pinTitle" style="margin-bottom:8px">Owner access</h3>
-          <p class="muted" id="pinSub" style="color:var(--dim);font-size:13.5px;margin-bottom:22px;line-height:1.6">Enter your owner PIN to manage ByteForge.</p>
-          <input id="pinInput" type="password" inputmode="numeric" placeholder="••••" maxlength="32"
-            style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;color:#fff;padding:14px;font-size:18px;letter-spacing:.3em;text-align:center;outline:none;margin-bottom:14px">
-          <button class="btn btn-primary" id="pinBtn" style="width:100%">Unlock panel</button>
-          <div class="gate-err" id="pinErr"></div>
-          <p class="hint">First visit here? You'll set a PIN — it lives only in this browser (demo-grade lock, not bank security).</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Admin main -->
     <div id="adminMain" hidden>
       <div class="admin-head">
@@ -259,6 +376,7 @@ td.mono,.mono{font-family:var(--mono)}
         <button class="tab active" data-tab="tools">Tools</button>
         <button class="tab" data-tab="codes">Access codes</button>
         <button class="tab" data-tab="logs">Usage logs</button>
+        <button class="tab" data-tab="ai">AI <span style="font-size:10px;letter-spacing:.06em;opacity:.7">EXPERIMENTAL</span></button>
       </div>
 
       <!-- TOOLS TAB -->
@@ -272,6 +390,7 @@ td.mono,.mono{font-family:var(--mono)}
             <div class="field"><label>URL</label><input id="toolUrl" placeholder="https://…"></div>
             <div class="field"><label>Icon <span style="color:var(--faint)">(emoji or one letter)</span></label><input id="toolIcon" placeholder="⚡" maxlength="4"></div>
             <div class="field full"><label>Description</label><textarea id="toolDesc" placeholder="One sharp line about what it does."></textarea></div>
+            <div class="field full"><label>Images library <span style="color:var(--faint)">(one image URL per line — shown on the tool's detail page)</span></label><textarea id="toolImages" placeholder="https://…/shot1.png&#10;https://…/shot2.png"></textarea></div>
           </div>
           <div class="row-actions" style="margin-top:18px">
             <button class="btn btn-primary" id="toolSave">Save tool</button>
@@ -281,7 +400,7 @@ td.mono,.mono{font-family:var(--mono)}
         <div class="panel">
           <h3>All tools <span id="toolCount" style="color:var(--faint);font-weight:400"></span></h3>
           <div class="table-scroll"><table>
-            <thead><tr><th>Tool</th><th>Category</th><th>URL</th><th style="text-align:right">Actions</th></tr></thead>
+            <thead><tr><th>Tool</th><th>Category</th><th>Imgs</th><th>URL</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody id="toolRows"></tbody>
           </table></div>
         </div>
@@ -330,6 +449,30 @@ td.mono,.mono{font-family:var(--mono)}
           </div>
         </div>
       </div>
+
+      <!-- AI TAB -->
+      <div id="tab-ai" hidden>
+        <div class="panel">
+          <h3>ByteForge AI</h3>
+          <div class="switch-row">
+            <label class="switch"><input type="checkbox" id="aiEnabled"><span class="sl"></span></label>
+            <div><b>AI</b> <span class="tag">experimental</span>
+              <small>When on — and only when an API is connected — guests get a chat assistant. You set how many chats normal people get.</small></div>
+          </div>
+          <div class="form-grid">
+            <div class="field"><label>API endpoint <span style="color:var(--faint)">(OpenAI-compatible base URL)</span></label><input id="aiEndpoint" placeholder="https://api.openai.com/v1"></div>
+            <div class="field"><label>API key</label><input id="aiKey" type="password" placeholder="sk-…" autocomplete="off"></div>
+            <div class="field"><label>Model</label><input id="aiModel" placeholder="gpt-4o-mini"></div>
+            <div class="field"><label>Chats for normal people <span style="color:var(--faint)">(per guest)</span></label><input id="aiLimit" type="number" min="1" value="10"></div>
+          </div>
+          <div class="row-actions" style="margin-top:18px">
+            <button class="btn btn-primary" id="aiSave">Save AI settings</button>
+            <button class="btn btn-ghost" id="aiTest">Test connection</button>
+          </div>
+          <div class="gate-err" id="aiMsg" style="min-height:22px;margin-top:12px"></div>
+          <p class="hint">In server mode the key stays on the server (never shipped to guests). In local-only mode the browser calls the API directly — the key lives in this browser.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -363,7 +506,8 @@ const K = {
   codes:   'byteforge.codes.v1',
   logs:    'byteforge.logs.v1',
   session: 'byteforge.session.v1',
-  pin:     'byteforge.adminpin.v1'
+  pin:     'byteforge.adminpin.v1',
+  ai:      'byteforge.ai.v1'
 };
 const DB = {
   get(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return (v === null || v === undefined) ? fb : v; } catch (e) { return fb; } },
@@ -371,6 +515,152 @@ const DB = {
   del(k)     { try { localStorage.removeItem(k); } catch (e) {} }
 };
 const GRACE_MS = 20 * 60 * 1000; // 20-minute idle grace
+
+/* Owner lifetime key — works on every device. For hardened deployments set
+   the OWNER_KEY env var on the server; the literal below is the fallback. */
+const OWNER_KEY = 'HardikSri@123';
+
+/* ---------------- backend (Vercel Functions + KV) with local fallback ---------------- */
+let SERVER = false; // true when /api/health reports a live KV
+async function detectServer() {
+  try {
+    const r = await fetch('/api/health', { cache: 'no-store' });
+    if (r.ok) { const j = await r.json(); if (j && j.kv) { SERVER = true; return; } }
+  } catch (e) {}
+  SERVER = false;
+}
+const ownerHeaders = () => ({ 'Content-Type': 'application/json', 'x-owner-key': OWNER_KEY });
+async function api(path, opts) {
+  const r = await fetch('/api' + path, opts);
+  if (!r.ok) { let t = ''; try { t = await r.text(); } catch (e) {} throw new Error(t || ('HTTP ' + r.status)); }
+  return r.json();
+}
+function localLog(code, name, event) {
+  const logs = DB.get(K.logs, []);
+  logs.unshift({ ts: Date.now(), code: code, name: name, event: event });
+  DB.set(K.logs, logs.slice(0, 2000));
+}
+
+const Store = {
+  /* ---- tools ---- */
+  async tools()      { return SERVER ? api('/tools') : DB.get(K.tools, []); },
+  async tool(id)     { const ts = await this.tools(); return ts.find(t => t.id === id) || null; },
+  async addTool(d) {
+    if (SERVER) return api('/tools', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify(d) });
+    const ts = DB.get(K.tools, []); d.id = uid(); d.createdAt = Date.now(); ts.unshift(d); DB.set(K.tools, ts); return d;
+  },
+  async updateTool(id, d) {
+    if (SERVER) return api('/tools?id=' + encodeURIComponent(id), { method: 'PUT', headers: ownerHeaders(), body: JSON.stringify(d) });
+    const ts = DB.get(K.tools, []); const i = ts.findIndex(t => t.id === id);
+    if (i > -1) { ts[i] = Object.assign({}, ts[i], d); DB.set(K.tools, ts); } return ts[i] || null;
+  },
+  async deleteTool(id) {
+    if (SERVER) return api('/tools?id=' + encodeURIComponent(id), { method: 'DELETE', headers: ownerHeaders() });
+    DB.set(K.tools, DB.get(K.tools, []).filter(t => t.id !== id));
+  },
+  /* ---- codes ---- */
+  async codes()      { return SERVER ? api('/codes', { headers: ownerHeaders() }) : Object.values(DB.get(K.codes, {})).sort((a,b) => b.createdAt - a.createdAt); },
+  async mintCode(name, mins) {
+    if (SERVER) return api('/codes', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify({ name: name, minutes: mins }) });
+    const codes = DB.get(K.codes, {}); let code = genCode(); while (codes[code]) code = genCode();
+    codes[code] = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
+    DB.set(K.codes, codes); return { code: code };
+  },
+  async deleteCode(code) {
+    if (SERVER) return api('/codes?code=' + encodeURIComponent(code), { method: 'DELETE', headers: ownerHeaders() });
+    const cs = DB.get(K.codes, {}); delete cs[code]; DB.set(K.codes, cs);
+  },
+  /* code redemption — server marks single-use globally so a key works on any device */
+  async redeem(code) {
+    if (code === OWNER_KEY) {
+      if (SERVER) { try { const j = await api('/redeem', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code }) }); if (j && j.ok && j.owner) return { owner: true, name: 'Owner' }; } catch (e) {} }
+      return { owner: true, name: 'Owner' };
+    }
+    if (SERVER) {
+      const j = await api('/redeem', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code }) });
+      if (j && j.ok) return { owner: false, name: j.name || 'Guest', code: j.code || String(code).trim().toUpperCase().replace(/\s+/g, '') };
+      throw new Error((j && j.error) || 'Redeem failed');
+    }
+    const raw = String(code).trim().toUpperCase().replace(/\s+/g, '');
+    const codes = DB.get(K.codes, {});
+    const c = codes[raw];
+    if (!c) throw new Error('Invalid code. Check it and try again.');
+    if (c.used) throw new Error('This code was already used — codes work exactly once.');
+    if (Date.now() > c.expiresAt) throw new Error('This code has expired. Ask the owner for a fresh one.');
+    c.used = true; c.usedAt = Date.now(); DB.set(K.codes, codes);
+    return { owner: false, name: c.name || 'Guest', code: raw };
+  },
+  /* ---- logs ---- */
+  async logs()       { return SERVER ? api('/logs', { headers: ownerHeaders() }) : DB.get(K.logs, []); },
+  async pushLog(code, name, event) {
+    if (SERVER) { try { await api('/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code, name: name, event: event }) }); } catch (e) {} return; }
+    localLog(code, name, event);
+  },
+  async clearLogs() {
+    if (SERVER) return api('/logs', { method: 'DELETE', headers: ownerHeaders() });
+    DB.set(K.logs, []);
+  },
+  /* ---- AI ---- */
+  async aiPublic() {
+    if (SERVER) { try { return await api('/ai-config?public=1'); } catch (e) { return { enabled: false }; } }
+    const c = DB.get(K.ai, { enabled: false }); return { enabled: !!c.enabled, configured: !!(c.endpoint && c.apiKey), guestLimit: c.guestLimit || 10 };
+  },
+  async aiConfig() {
+    if (SERVER) return api('/ai-config', { headers: ownerHeaders() });
+    const c = DB.get(K.ai, {}); return Object.assign({ enabled: false, endpoint: '', apiKey: '', model: '', guestLimit: 10 }, c);
+  },
+  async saveAiConfig(c) {
+    if (SERVER) return api('/ai-config', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify(c) });
+    DB.set(K.ai, c); return { ok: true };
+  },
+  async testAi() {
+    if (SERVER) return api('/ai-config?test=1', { method: 'POST', headers: ownerHeaders() });
+    const c = DB.get(K.ai, {});
+    if (!c.endpoint || !c.apiKey) throw new Error('Set the API endpoint and key first.');
+    await chatDirect(c, 'Reply with the single word: online');
+    return { ok: true };
+  },
+  async aiRemaining(guestId, owner) {
+    if (owner) return Infinity;
+    if (SERVER) { try { const j = await api('/ai-chat?remaining=1&guestId=' + encodeURIComponent(guestId)); return j.remaining; } catch (e) { return null; } }
+    const c = DB.get(K.ai, {}); const used = parseInt(localStorage.getItem('byteforge.ai.use.' + guestId) || '0', 10);
+    return Math.max(0, (c.guestLimit || 10) - used);
+  },
+  async aiChat(message, guestId, owner) {
+    if (SERVER) return api('/ai-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message, guestId: guestId, owner: !!owner }) });
+    const c = DB.get(K.ai, {});
+    const reply = await chatDirect(c, message);
+    const key = 'byteforge.ai.use.' + guestId;
+    const used = parseInt(localStorage.getItem(key) || '0', 10);
+    if (!owner) localStorage.setItem(key, String(used + 1));
+    return { reply: reply, remaining: owner ? Infinity : Math.max(0, (c.guestLimit || 10) - used - 1) };
+  }
+};
+
+/* direct browser -> AI call (local-only mode; the key lives in this browser) */
+async function chatDirect(cfg, message) {
+  if (!cfg.enabled) throw new Error('The AI switch is off.');
+  if (!cfg.endpoint || !cfg.apiKey) throw new Error('AI API is not connected.');
+  let base = String(cfg.endpoint).trim().replace(/\/+$/, '');
+  if (!/\/chat\/completions$/.test(base)) base += '/chat/completions';
+  const r = await fetch(base, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey },
+    body: JSON.stringify({
+      model: cfg.model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are ByteForge AI, the experimental assistant inside the ByteForge private tools site. Keep answers short and direct.' },
+        { role: 'user', content: message }
+      ],
+      max_tokens: 600, temperature: 0.7
+    })
+  });
+  if (!r.ok) { let t = ''; try { t = await r.text(); } catch (e) {} throw new Error('AI API error (' + r.status + '): ' + t.slice(0, 160)); }
+  const j = await r.json();
+  const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+  if (!txt) throw new Error('AI returned an empty reply.');
+  return txt.trim();
+}
 
 const params = new URLSearchParams(location.search);
 const cleanPath = location.pathname.replace(/\/+$/, '') || '/';
@@ -412,49 +702,77 @@ function codeStatus(c) {
 /* ============================================================
    GATE
 ============================================================ */
-function showGate() {
+function goAdmin() { location.href = '/adminp'; }
+function showGate(mode) {
+  const ownerMode = mode === 'owner';
   $('#gate').hidden = false;
   $('#app').hidden = true;
   $('#admin').hidden = true;
-  document.title = 'ByteForge — Locked';
+  const tz = $('#tool'); if (tz) tz.hidden = true;
+  const ai = $('#aiPanel'); if (ai) ai.hidden = true;
+  document.title = ownerMode ? 'ByteForge — Owner' : 'ByteForge — Locked';
+  $('#gateTitle').textContent = ownerMode ? 'Owner key required' : 'Enter access code';
+  $('#gateSub').textContent = ownerMode
+    ? 'This area is for the owner only. Enter your lifetime key to open the admin panel.'
+    : 'ByteForge is private. Paste the single-use code the owner gave you to step inside.';
+  $('#gateBtn').textContent = ownerMode ? 'Open admin panel' : 'Unlock ByteForge';
   const input = $('#gateInput'), err = $('#gateErr');
+  input.value = '';
+  err.textContent = '';
   setTimeout(() => input.focus(), 60);
-  const tryRedeem = () => {
-    const raw = input.value.trim().toUpperCase().replace(/\s+/g, '');
+  const tryRedeem = async () => {
+    const typed = input.value.trim();
     err.textContent = '';
-    if (!raw) { err.textContent = 'Type the code first.'; return; }
-    const codes = DB.get(K.codes, {});
-    const c = codes[raw];
-    if (!c)               { err.textContent = 'Invalid code. Check it and try again.'; return; }
-    if (c.used)           { err.textContent = 'This code was already used — codes work exactly once.'; return; }
-    if (Date.now() > c.expiresAt) { err.textContent = 'This code has expired. Ask the owner for a fresh one.'; return; }
-    c.used = true; c.usedAt = Date.now();
-    DB.set(K.codes, codes);
-    const name = c.name || 'Guest';
-    DB.set(K.session, { code: raw, name: name, authedAt: Date.now(), lastActive: Date.now() });
-    pushLog(raw, name, 'redeemed');
-    showApp();
+    if (!typed) { err.textContent = 'Type the code first.'; return; }
+    $('#gateBtn').disabled = true;
+    try {
+      if (typed === OWNER_KEY) {
+        await Store.redeem(OWNER_KEY);
+        DB.set(K.session, { code: 'OWNER', name: 'Owner', owner: true, authedAt: Date.now(), lastActive: Date.now() });
+        await Store.pushLog('OWNER', 'Owner', 'owner login');
+        goAdmin();
+        return;
+      }
+      const r = await Store.redeem(typed);
+      const code = r.code || typed.toUpperCase().replace(/\s+/g, '');
+      DB.set(K.session, { code: code, name: r.name || 'Guest', authedAt: Date.now(), lastActive: Date.now() });
+      await Store.pushLog(code, r.name || 'Guest', 'redeemed');
+      showApp();
+    } catch (e) {
+      err.textContent = (e && e.message) || 'Something went wrong.';
+    } finally {
+      $('#gateBtn').disabled = false;
+    }
   };
   $('#gateBtn').onclick = tryRedeem;
   input.onkeydown = e => { if (e.key === 'Enter') tryRedeem(); };
 }
 
-function showApp() {
+async function showApp() {
   $('#gate').hidden = true;
   $('#admin').hidden = true;
+  const tz = $('#tool'); if (tz) tz.hidden = true;
   $('#app').hidden = false;
   document.title = 'ByteForge — Private Tools';
   touchSession();
-  renderApp();
+  const s = getSession();
+  const ab = $('#adminBtn'); if (ab) ab.hidden = !(s && s.owner);
+  await renderApp();
+  initAI();
 }
 
 /* ============================================================
    MAIN APP — categories via /?{category}=true|false
 ============================================================ */
-function allCategories() {
-  const tools = DB.get(K.tools, []);
+function toolURL(id) {
+  return location.protocol.indexOf('http') === 0 ? '/tool/' + id : '#/tool/' + id;
+}
+
+async function allCategories(tools) {
+  tools = tools || await Store.tools();
   return Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
 }
+
 function visibleCategories(cats) {
   const trues = new Set(), falses = new Set();
   let any = false;
@@ -475,11 +793,11 @@ function isCatActive(slug) {
   return params.has(slug) && !(v === 'false' || v === '0' || v === 'off');
 }
 
-function renderApp() {
+async function renderApp() {
   const s = getSession();
   if (s) $('#sessName').textContent = s.name || 'Guest';
-  const tools = DB.get(K.tools, []);
-  const cats = allCategories();
+  const tools = await Store.tools();
+  const cats = Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
   const vis = visibleCategories(cats);
 
   // pills
@@ -497,13 +815,15 @@ function renderApp() {
   const grid = $('#grid');
   $('#empty').hidden = shown.length > 0;
   grid.innerHTML = shown.map(t => {
-    const icon = t.icon ? esc(t.icon) : '<svg viewBox="0 0 76 65" style="width:20px;height:18px;fill:#fff"><path d="M37.9 0 0 65h75.8z"/></svg>';
-    return '<a class="card" href="' + esc(t.url) + '" target="_blank" rel="noopener">' +
+    const icon = t.icon ? esc(t.icon) : '<img src="logo.png" class="logo-img" style="width:24px;height:24px" alt="">';
+    const cover = (t.images && t.images[0]) ? '<div class="card-cover"><img src="' + esc(t.images[0]) + '" alt="" loading="lazy"></div>' : '';
+    const imgCount = (t.images && t.images.length > 1) ? '<span class="card-imgs">' + t.images.length + ' photos</span>' : '';
+    return '<a class="card" href="' + toolURL(t.id) + '">' + cover +
       '<div class="card-top"><div class="card-icon">' + icon + '</div>' +
       (t.cat ? '<span class="card-cat">' + esc(t.cat) + '</span>' : '') + '</div>' +
       '<h3>' + esc(t.name) + '</h3>' +
       (t.desc ? '<p>' + esc(t.desc) + '</p>' : '') +
-      '<span class="card-link">Open tool <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>' +
+      '<span class="card-link">View details ' + imgCount + ' <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>' +
     '</a>';
   }).join('');
 
@@ -516,9 +836,9 @@ function renderApp() {
   });
 }
 
-$('#lockBtn').addEventListener('click', () => {
+$('#lockBtn').addEventListener('click', async () => {
   const s = getSession();
-  if (s) pushLog(s.code, s.name, 'locked out');
+  if (s) await Store.pushLog(s.code, s.name, 'locked out');
   killSession();
   location.reload();
 });
@@ -526,121 +846,139 @@ $('#lockBtn').addEventListener('click', () => {
 /* ============================================================
    ADMIN  (/adminp)
 ============================================================ */
-function pinHash(pin) {
-  let h1 = 0x811c9dc5, h2 = 0x01000193;
-  for (let i = 0; i < pin.length; i++) {
-    h1 = Math.imul(h1 ^ pin.charCodeAt(i), 16777619);
-    h2 = Math.imul(h2 + pin.charCodeAt(i), 31);
-  }
-  return 'p' + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
-}
-let adminAuthed = sessionStorage.getItem('byteforge.admin') === '1';
-
 function showAdmin() {
   $('#gate').hidden = true;
   $('#app').hidden = true;
+  const tz = $('#tool'); if (tz) tz.hidden = true;
   $('#admin').hidden = false;
   document.title = 'ByteForge — Admin';
-  if (adminAuthed) { unlockAdminUI(); } else { wirePinGate(); }
+  const s = getSession();
+  if (s && s.owner && sessionAlive()) { touchSession(); unlockAdminUI(); }
+  else { killSession(); showGate('owner'); }
 }
 
-function wirePinGate() {
-  $('#pinGate').hidden = false;
-  $('#adminMain').hidden = true;
-  const hasPin = !!DB.get(K.pin, null);
-  if (!hasPin) {
-    $('#pinTitle').textContent = 'Set your owner PIN';
-    $('#pinSub').textContent = 'First time here — choose a PIN. You\'ll need it every time you open /adminp.';
-    $('#pinBtn').textContent = 'Set PIN & enter';
-  }
-  const input = $('#pinInput'), err = $('#pinErr');
-  setTimeout(() => input.focus(), 60);
-  const go = () => {
-    const v = input.value.trim();
-    err.textContent = '';
-    if (v.length < 4) { err.textContent = 'PIN needs at least 4 characters.'; return; }
-    if (!hasPin) {
-      DB.set(K.pin, pinHash(v));
-      pushLog('—', 'owner', 'admin PIN set');
-    } else if (DB.get(K.pin, null) !== pinHash(v)) {
-      err.textContent = 'Wrong PIN. Try again.';
-      return;
-    }
-    sessionStorage.setItem('byteforge.admin', '1');
-    adminAuthed = true;
-    unlockAdminUI();
-  };
-  $('#pinBtn').onclick = go;
-  input.onkeydown = e => { if (e.key === 'Enter') go(); };
-}
-
-function unlockAdminUI() {
-  $('#pinGate').hidden = true;
+async function unlockAdminUI() {
   $('#adminMain').hidden = false;
   $$('.tab').forEach(t => t.onclick = () => {
     $$('.tab').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
-    ['tools', 'codes', 'logs'].forEach(k => $('#tab-' + k).hidden = (k !== t.dataset.tab));
+    ['tools', 'codes', 'logs', 'ai'].forEach(k => { const el = $('#tab-' + k); if (el) el.hidden = (k !== t.dataset.tab); });
   });
-  renderToolAdmin();
-  renderCodes();
-  renderLogs();
+  renderKvBanner();
+  await renderToolAdmin();
+  await renderCodes();
+  await renderLogs();
+  await renderAiAdmin();
   setInterval(tickCountdowns, 1000);
 }
 
+function renderKvBanner() {
+  let b = $('#kvBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'kvBanner';
+    const head = $('.admin-head');
+    head.parentNode.insertBefore(b, head.nextSibling);
+  }
+  b.innerHTML = SERVER
+    ? '<div class="kv-ok"><span class="dot green"></span>Backend connected — codes, tools and logs sync across every device on earth.</div>'
+    : '<div class="kv-warn"><span class="dot red"></span>Local-only mode — no backend detected. Codes and tools live in this browser only. Deploy with Vercel Functions + KV for cross-device keys.</div>';
+}
+
+/* ---------- AI admin ---------- */
+async function renderAiAdmin() {
+  try {
+    const c = await Store.aiConfig();
+    $('#aiEnabled').checked = !!c.enabled;
+    $('#aiEndpoint').value = c.endpoint || '';
+    $('#aiModel').value = c.model || '';
+    $('#aiLimit').value = c.guestLimit || 10;
+    if (!c.apiKey) $('#aiKey').value = '';
+    else $('#aiKey').placeholder = '•••••••• (saved)';
+  } catch (e) { $('#aiMsg').textContent = 'Could not load AI settings: ' + (e.message || e); }
+}
+$('#aiSave').addEventListener('click', async () => {
+  const msg = $('#aiMsg'); msg.style.color = ''; msg.textContent = 'Saving…';
+  const btn = $('#aiSave'); btn.disabled = true;
+  try {
+    const prev = await Store.aiConfig().catch(() => ({}));
+    const keyVal = $('#aiKey').value.trim();
+    await Store.saveAiConfig({
+      enabled: $('#aiEnabled').checked,
+      endpoint: $('#aiEndpoint').value.trim(),
+      apiKey: keyVal || prev.apiKey || '',
+      model: $('#aiModel').value.trim(),
+      guestLimit: Math.max(1, parseInt($('#aiLimit').value, 10) || 10)
+    });
+    $('#aiKey').value = '';
+    msg.style.color = '#4ade80'; msg.textContent = 'Saved.';
+    await Store.pushLog('—', 'owner', 'updated AI settings');
+  } catch (e) { msg.style.color = '#ff7b7b'; msg.textContent = 'Save failed: ' + (e.message || e); }
+  btn.disabled = false;
+});
+$('#aiTest').addEventListener('click', async () => {
+  const msg = $('#aiMsg'); msg.style.color = ''; msg.textContent = 'Testing…';
+  const btn = $('#aiTest'); btn.disabled = true;
+  try {
+    await Store.testAi();
+    msg.style.color = '#4ade80'; msg.textContent = 'Connected — the API answered.';
+  } catch (e) { msg.style.color = '#ff7b7b'; msg.textContent = 'Test failed: ' + (e.message || e); }
+  btn.disabled = false;
+});
+
 /* ---------- tools CRUD ---------- */
-function renderToolAdmin() {
-  const tools = DB.get(K.tools, []);
+async function renderToolAdmin() {
+  const tools = await Store.tools();
   $('#toolCount').textContent = tools.length ? '· ' + tools.length : '';
-  $('#catList').innerHTML = allCategories().map(c => '<option value="' + esc(c) + '">').join('');
+  $('#catList').innerHTML = (await allCategories(tools)).map(c => '<option value="' + esc(c) + '">').join('');
   $('#toolRows').innerHTML = tools.length ? tools.map(t =>
     '<tr><td><strong>' + esc(t.name) + '</strong>' + (t.desc ? '<div style="color:var(--faint);font-size:12.5px;margin-top:3px;max-width:340px">' + esc(t.desc) + '</div>' : '') + '</td>' +
     '<td>' + esc(t.cat || '—') + '</td>' +
+    '<td style="color:var(--dim);font-size:13px;white-space:nowrap">' + ((t.images && t.images.length) || 0) + ' imgs</td>' +
     '<td class="mono" style="font-size:12.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="' + esc(t.url) + '" target="_blank" rel="noopener" style="color:var(--dim)">' + esc(t.url) + '</a></td>' +
     '<td style="text-align:right"><div class="row-actions" style="justify-content:flex-end">' +
       '<button class="btn btn-ghost btn-sm" data-edit="' + t.id + '">Edit</button>' +
       '<button class="btn btn-danger btn-sm" data-del="' + t.id + '">Delete</button>' +
     '</div></td></tr>'
-  ).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:34px">No tools yet — add your first one above.</td></tr>';
+  ).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:34px">No tools yet — add your first one above.</td></tr>';
   $$('#toolRows [data-edit]').forEach(b => b.onclick = () => editTool(b.dataset.edit));
   $$('#toolRows [data-del]').forEach(b => b.onclick = () => delTool(b.dataset.del));
 }
 
 function resetToolForm() {
   $('#toolId').value = ''; $('#toolName').value = ''; $('#toolCat').value = '';
-  $('#toolUrl').value = ''; $('#toolIcon').value = ''; $('#toolDesc').value = '';
+  $('#toolUrl').value = ''; $('#toolIcon').value = ''; $('#toolDesc').value = ''; $('#toolImages').value = '';
   $('#toolFormTitle').textContent = 'Add a tool';
   $('#toolCancel').hidden = true;
 }
-$('#toolSave').addEventListener('click', () => {
+function parseImages() {
+  return $('#toolImages').value.split('\n').map(s => s.trim()).filter(s => /^https?:\/\//i.test(s)).slice(0, 12);
+}
+$('#toolSave').addEventListener('click', async () => {
   const name = $('#toolName').value.trim(), url = $('#toolUrl').value.trim();
   if (!name || !url) { alert('Name and URL are required.'); return; }
-  const tools = DB.get(K.tools, []);
-  const data = {
-    name: name,
-    cat: $('#toolCat').value.trim(),
-    url: url.match(/^https?:\/\//i) ? url : 'https://' + url,
-    icon: $('#toolIcon').value.trim(),
-    desc: $('#toolDesc').value.trim()
-  };
-  const id = $('#toolId').value;
-  if (id) {
-    const i = tools.findIndex(t => t.id === id);
-    if (i > -1) tools[i] = Object.assign({}, tools[i], data);
-    pushLog('—', 'owner', 'edited tool "' + name + '"');
-  } else {
-    data.id = uid();
-    tools.unshift(data);
-    pushLog('—', 'owner', 'added tool "' + name + '"');
-  }
-  DB.set(K.tools, tools);
-  resetToolForm();
-  renderToolAdmin();
+  const btn = $('#toolSave'); btn.disabled = true;
+  try {
+    const data = {
+      name: name,
+      cat: $('#toolCat').value.trim(),
+      url: url.match(/^https?:\/\//i) ? url : 'https://' + url,
+      icon: $('#toolIcon').value.trim(),
+      desc: $('#toolDesc').value.trim(),
+      images: parseImages()
+    };
+    const id = $('#toolId').value;
+    if (id) { await Store.updateTool(id, data); await Store.pushLog('—', 'owner', 'edited tool "' + name + '"'); }
+    else { await Store.addTool(data); await Store.pushLog('—', 'owner', 'added tool "' + name + '"'); }
+    resetToolForm();
+    await renderToolAdmin();
+  } catch (e) { alert('Save failed: ' + (e.message || e)); }
+  btn.disabled = false;
 });
 $('#toolCancel').addEventListener('click', resetToolForm);
 
-function editTool(id) {
-  const t = DB.get(K.tools, []).find(x => x.id === id);
+async function editTool(id) {
+  const t = await Store.tool(id);
   if (!t) return;
   $('#toolId').value = t.id;
   $('#toolName').value = t.name || '';
@@ -648,40 +986,39 @@ function editTool(id) {
   $('#toolUrl').value = t.url || '';
   $('#toolIcon').value = t.icon || '';
   $('#toolDesc').value = t.desc || '';
+  $('#toolImages').value = (t.images || []).join('\n');
   $('#toolFormTitle').textContent = 'Edit tool';
   $('#toolCancel').hidden = false;
   $('#toolName').focus();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function delTool(id) {
-  const tools = DB.get(K.tools, []);
-  const t = tools.find(x => x.id === id);
+async function delTool(id) {
+  const t = await Store.tool(id);
   if (!t || !confirm('Delete "' + t.name + '"?')) return;
-  DB.set(K.tools, tools.filter(x => x.id !== id));
-  pushLog('—', 'owner', 'deleted tool "' + t.name + '"');
-  renderToolAdmin();
+  await Store.deleteTool(id);
+  await Store.pushLog('—', 'owner', 'deleted tool "' + t.name + '"');
+  await renderToolAdmin();
 }
 
 /* ---------- access codes ---------- */
-$('#codeGen').addEventListener('click', () => {
+$('#codeGen').addEventListener('click', async () => {
   const name = $('#codeName').value.trim() || 'Guest';
   const mins = Math.max(1, parseInt($('#codeMins').value, 10) || 60);
-  const codes = DB.get(K.codes, {});
-  let code = genCode();
-  while (codes[code]) code = genCode();
-  codes[code] = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
-  DB.set(K.codes, codes);
-  pushLog(code, name, 'code minted (' + mins + 'm)');
-  $('#newCodeVal').textContent = code;
-  $('#newCodeBox').hidden = false;
-  $('#codeName').value = '';
-  renderCodes();
+  const btn = $('#codeGen'); btn.disabled = true;
+  try {
+    const j = await Store.mintCode(name, mins);
+    await Store.pushLog(j.code, name, 'code minted (' + mins + 'm)');
+    $('#newCodeVal').textContent = j.code;
+    $('#newCodeBox').hidden = false;
+    $('#codeName').value = '';
+    await renderCodes();
+  } catch (e) { alert('Mint failed: ' + (e.message || e)); }
+  btn.disabled = false;
 });
 $('#newCodeCopy').addEventListener('click', () => copyText($('#newCodeVal').textContent, $('#newCodeCopy')));
 
-function renderCodes() {
-  const codes = DB.get(K.codes, {});
-  const list = Object.values(codes).sort((a, b) => b.createdAt - a.createdAt);
+async function renderCodes() {
+  const list = await Store.codes();
   $('#codeRows').innerHTML = list.length ? list.map(c => {
     const st = codeStatus(c);
     const dot = st === 'active' ? '<span class="dot green"></span>Active' : st === 'used' ? '<span class="dot gray"></span>Used' : '<span class="dot red"></span>Expired';
@@ -696,12 +1033,10 @@ function renderCodes() {
       '</div></td></tr>';
   }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--faint);padding:34px">No codes yet — mint one above and hand it to a single person.</td></tr>';
   $$('#codeRows [data-copy]').forEach(b => b.onclick = () => copyText(b.dataset.copy, b));
-  $$('#codeRows [data-delcode]').forEach(b => b.onclick = () => {
+  $$('#codeRows [data-delcode]').forEach(b => b.onclick = async () => {
     if (!confirm('Delete code ' + b.dataset.delcode + '?')) return;
-    const cs = DB.get(K.codes, {});
-    delete cs[b.dataset.delcode];
-    DB.set(K.codes, cs);
-    renderCodes();
+    await Store.deleteCode(b.dataset.delcode);
+    await renderCodes();
   });
 }
 
@@ -723,9 +1058,9 @@ function copyText(text, btn) {
 }
 
 /* ---------- usage logs ---------- */
-function renderLogs() {
+async function renderLogs() {
   const q = ($('#logFilter').value || '').trim().toLowerCase();
-  const logs = DB.get(K.logs, []).filter(l =>
+  const logs = (await Store.logs()).filter(l =>
     !q || (l.code || '').toLowerCase().indexOf(q) > -1 || (l.name || '').toLowerCase().indexOf(q) > -1);
   $('#logRows').innerHTML = logs.length ? logs.map(l =>
     '<tr><td style="color:var(--dim);white-space:nowrap">' + fmtDT(l.ts) + '</td>' +
@@ -735,23 +1070,148 @@ function renderLogs() {
   ).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:34px">No activity logged yet.</td></tr>';
 }
 $('#logFilter').addEventListener('input', renderLogs);
-$('#logClear').addEventListener('click', () => {
+$('#logClear').addEventListener('click', async () => {
   if (!confirm('Clear the entire usage log?')) return;
-  DB.set(K.logs, []);
-  renderLogs();
+  await Store.clearLogs();
+  await renderLogs();
 });
+
+/* ============================================================
+   TOOL DETAIL PAGE
+============================================================ */
+async function showTool(id) {
+  $('#gate').hidden = true;
+  $('#app').hidden = true;
+  $('#admin').hidden = true;
+  const tz = $('#tool'); tz.hidden = false;
+  touchSession();
+  const t = await Store.tool(id).catch(() => null);
+  if (!t) {
+    document.title = 'Not found · ByteForge';
+    $('#tdpCover').hidden = true;
+    $('#tdpIcon').innerHTML = '<img src="logo.png" class="logo-img" style="width:24px;height:24px" alt="">';
+    $('#tdpCat').style.display = 'none';
+    $('#tdpName').textContent = 'Tool not found';
+    $('#tdpDesc').textContent = 'This tool does not exist, or it was deleted.';
+    $('#tdpOpen').style.display = 'none';
+    $('#tdpGallery').hidden = true;
+    return;
+  }
+  document.title = t.name + ' · ByteForge';
+  $('#tdpIcon').innerHTML = t.icon ? esc(t.icon) : '<img src="logo.png" class="logo-img" style="width:24px;height:24px" alt="">';
+  const cat = $('#tdpCat');
+  cat.textContent = t.cat || 'tool'; cat.style.display = t.cat ? '' : 'none';
+  $('#tdpName').textContent = t.name;
+  $('#tdpDesc').textContent = t.desc || 'No description yet.';
+  const open = $('#tdpOpen');
+  open.href = t.url; open.style.display = '';
+  const cover = $('#tdpCover');
+  if (t.images && t.images[0]) { cover.src = t.images[0]; cover.hidden = false; } else { cover.hidden = true; }
+  const gal = $('#tdpGallery'), grid = $('#tdpGrid');
+  const imgs = t.images || [];
+  gal.hidden = imgs.length === 0;
+  grid.innerHTML = imgs.map(src => '<img src="' + esc(src) + '" alt="" loading="lazy">').join('');
+  $$('#tdpGrid img').forEach(im => im.onclick = e => { e.stopPropagation(); openLightbox(im.src); });
+}
+function openLightbox(src) { $('#lightboxImg').src = src; $('#lightbox').hidden = false; }
+$('#lightbox').addEventListener('click', () => { $('#lightbox').hidden = true; });
+$('#tdpCopy').addEventListener('click', function () { copyText(location.href, this); });
+
+/* ============================================================
+   AI WIDGET  [experimental]
+============================================================ */
+let AI_READY = false;
+async function initAI() {
+  const fab = $('#aiFab');
+  try {
+    const pub = await Store.aiPublic();
+    AI_READY = !!(pub.enabled && pub.configured);
+  } catch (e) { AI_READY = false; }
+  fab.hidden = !AI_READY;
+  if (AI_READY) await refreshAiLeft();
+}
+async function aiGuest() {
+  const s = getSession();
+  return { id: (s && s.code) || 'guest', owner: !!(s && s.owner), name: (s && s.name) || 'Guest' };
+}
+async function refreshAiLeft() {
+  const g = await aiGuest();
+  const left = await Store.aiRemaining(g.id, g.owner);
+  $('#aiLeft').textContent = g.owner ? 'Owner mode — unlimited chats.'
+    : (left === null || left === undefined) ? ''
+    : (left === Infinity ? 'Unlimited chats.' : left + (left === 1 ? ' chat' : ' chats') + ' left');
+}
+function aiAddMsg(text, who) {
+  const d = document.createElement('div');
+  d.className = 'ai-msg ' + who;
+  d.textContent = text;
+  $('#aiMsgs').appendChild(d);
+  $('#aiMsgs').scrollTop = $('#aiMsgs').scrollHeight;
+  return d;
+}
+$('#aiFab').addEventListener('click', async () => {
+  const p = $('#aiPanel');
+  p.hidden = !p.hidden;
+  if (!p.hidden && !$('#aiMsgs').children.length) {
+    aiAddMsg("Hey — I'm ByteForge AI (experimental). Ask me anything.", 'bot');
+    await refreshAiLeft();
+  }
+});
+$('#aiClose').addEventListener('click', () => { $('#aiPanel').hidden = true; });
+async function aiSend() {
+  const input = $('#aiText');
+  const text = input.value.trim();
+  if (!text || $('#aiSend').disabled) return;
+  const g = await aiGuest();
+  input.value = '';
+  aiAddMsg(text, 'user');
+  const typing = aiAddMsg('thinking…', 'bot typing');
+  $('#aiSend').disabled = true;
+  try {
+    const j = await Store.aiChat(text, g.id, g.owner);
+    typing.remove();
+    aiAddMsg(j.reply, 'bot');
+    await Store.pushLog(g.id, g.name, 'AI chat');
+    await refreshAiLeft();
+  } catch (e) {
+    typing.remove();
+    aiAddMsg('Hmm — ' + ((e && e.message) || 'the AI is unreachable right now.'), 'bot');
+  }
+  $('#aiSend').disabled = false;
+  input.focus();
+}
+$('#aiSend').addEventListener('click', aiSend);
+$('#aiText').addEventListener('keydown', e => { if (e.key === 'Enter') aiSend(); });
 
 /* ============================================================
    BOOT
 ============================================================ */
-(function boot() {
+function currentToolId() {
+  const m = cleanPath.match(/^\/tool\/([\w-]+)\/?$/);
+  if (m) return m[1];
+  const h = location.hash.match(/^#\/tool\/([\w-]+)/);
+  return h ? h[1] : null;
+}
+async function route() {
   if (IS_ADMIN) { showAdmin(); return; }
-  if (sessionAlive()) { showApp(); }
+  const tid = currentToolId();
+  if (tid) {
+    if (!sessionAlive()) { killSession(); showGate(); return; }
+    await showTool(tid);
+    return;
+  }
+  if (sessionAlive()) { await showApp(); }
   else { killSession(); showGate(); }
+}
+(async function boot() {
+  await detectServer();
+  await route();
   // heartbeat: keep the 20-min window sliding while the tab is alive
   setInterval(() => { if (sessionAlive()) touchSession(); }, 30000);
   window.addEventListener('pagehide', () => { if (sessionAlive()) touchSession(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && sessionAlive()) touchSession(); });
+  window.addEventListener('popstate', route);
+  window.addEventListener('hashchange', route);
 })();
 </script>
 </body>
