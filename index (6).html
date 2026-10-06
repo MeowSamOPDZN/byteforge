@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ByteForge — Private Tools</title>
+<meta name="description" content="ByteForge — a private, invite-only arsenal of tools.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 65'%3E%3Cpath fill='white' d='M37.9 0 0 65h75.8z'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000; --fg:#fff; --dim:#a1a1a1; --faint:#666;
+  --border:rgba(255,255,255,.08); --glass:rgba(255,255,255,.04);
+  --font:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html{scroll-behavior:smooth}
+body{background:#000;color:#ededed;font-family:var(--font);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#fff;color:#000}
+a{color:inherit}
+
+/* ---------- backdrop : vercel-style beams + grid ---------- */
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(140,140,255,.10), transparent 60%),
+    radial-gradient(ellipse 55% 40% at 85% 115%, rgba(0,180,255,.06), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 10% 110%, rgba(180,80,255,.05), transparent 60%),
+    #000;}
+.bg::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(ellipse 75% 62% at 50% 0%,#000 25%,transparent 78%);
+  mask-image:radial-gradient(ellipse 75% 62% at 50% 0%,#000 25%,transparent 78%);}
+.bg::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 22% at 50% 0%, rgba(255,255,255,.06), transparent 70%);}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(0,0,0,.62);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1120px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;font-size:17px;color:#fff;text-decoration:none}
+.brand svg{width:23px;height:20px;fill:#fff;display:block}
+.nav-badge{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#000;background:#fff;border-radius:999px;padding:3px 10px;font-weight:700}
+.sess{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim);border:1px solid var(--border);border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
+.sess .pulse{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ---------- buttons / inputs ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9px;font-weight:500;font-size:14px;padding:10px 20px;cursor:pointer;border:1px solid transparent;transition:all .18s ease;text-decoration:none;font-family:inherit;white-space:nowrap}
+.btn-primary{background:#fff;color:#000}
+.btn-primary:hover{background:#dcdcdc;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:#ededed;border-color:var(--border)}
+.btn-ghost:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.05)}
+.btn-danger{background:rgba(255,80,80,.1);color:#ff8080;border-color:rgba(255,80,80,.25)}
+.btn-danger:hover{background:rgba(255,80,80,.2)}
+.btn-sm{padding:6px 13px;font-size:13px;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+input,textarea,select{font-family:inherit}
+
+/* ---------- hero ---------- */
+.hero{max-width:1120px;margin:0 auto;padding:84px 24px 30px;text-align:center}
+.hero-mark{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02));border:1px solid var(--border);margin-bottom:26px;box-shadow:0 8px 40px rgba(255,255,255,.06)}
+.hero-mark svg{width:30px;height:26px;fill:#fff}
+.hero h1{font-size:clamp(52px,9vw,104px);font-weight:800;letter-spacing:-.055em;line-height:.95;background:linear-gradient(180deg,#fff 30%,#8a8a8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--dim);font-size:17px;margin:20px auto 0;max-width:560px;line-height:1.65}
+.hero-rule{width:120px;height:1px;margin:34px auto 0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent)}
+
+/* ---------- category pills ---------- */
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:30px 0 6px}
+.pill{padding:7px 17px;border-radius:999px;border:1px solid var(--border);color:var(--dim);font-size:13.5px;text-decoration:none;transition:all .18s;background:rgba(255,255,255,.02)}
+.pill:hover{color:#fff;border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
+.pill.active{background:#fff;color:#000;border-color:#fff;font-weight:600}
+
+/* ---------- tool cards : glassmorphism ---------- */
+.grid{max-width:1120px;margin:0 auto;padding:26px 24px 90px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{position:relative;border-radius:18px;padding:28px;background:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.02) 55%);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;cursor:pointer;overflow:hidden;text-decoration:none;display:block}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 200px at var(--mx,50%) -30%,rgba(255,255,255,.1),transparent 70%);opacity:0;transition:opacity .25s;pointer-events:none}
+.card::after{content:"";position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);pointer-events:none}
+.card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.24);box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04)}
+.card:hover::before{opacity:1}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.card-icon{width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,.07);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.card-cat{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px solid var(--border);padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.03);white-space:nowrap}
+.card h3{font-size:19px;font-weight:650;letter-spacing:-.015em;margin-bottom:9px;color:#fff}
+.card p{color:var(--dim);font-size:14px;line-height:1.65;margin-bottom:18px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-link{color:#fff;font-size:13.5px;font-weight:500;display:inline-flex;gap:7px;align-items:center}
+.card-link svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .2s}
+.card:hover .card-link svg{transform:translate(2px,-2px)}
+
+/* ---------- empty state ---------- */
+.empty{max-width:640px;margin:20px auto 90px;padding:70px 40px;text-align:center;border-radius:22px;border:1.5px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.02);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.empty svg{width:44px;height:38px;fill:none;stroke:rgba(255,255,255,.28);stroke-width:2;margin-bottom:22px}
+.empty h2{font-size:24px;letter-spacing:-.02em;margin-bottom:10px}
+.empty p{color:var(--dim);font-size:14.5px;line-height:1.6}
+
+/* ---------- footer ---------- */
+.footer{border-top:1px solid var(--border);padding:30px 24px;text-align:center;color:var(--faint);font-size:13px}
+.footer .brand{justify-content:center;margin-bottom:8px;font-size:14px}
+.footer svg{width:18px;height:16px}
+
+/* ---------- gate ---------- */
+.gate-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+.gate{width:100%;max-width:430px;text-align:center;padding:48px 38px;border-radius:24px;background:linear-gradient(165deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid var(--border);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%);box-shadow:0 40px 120px rgba(0,0,0,.7);position:relative;overflow:hidden}
+.gate::after{content:"";position:absolute;top:0;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)}
+.gate-mark{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px}
+.gate-mark svg{width:26px;height:23px;fill:#fff}
+.gate h2{font-size:26px;letter-spacing:-.03em;margin-bottom:10px}
+.gate .muted{color:var(--dim);font-size:14px;line-height:1.6;margin-bottom:26px}
+.gate input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;color:#fff;padding:14px 16px;font-size:17px;letter-spacing:.18em;text-align:center;text-transform:uppercase;outline:none;font-family:var(--mono);transition:border-color .18s}
+.gate input:focus{border-color:rgba(255,255,255,.45);box-shadow:0 0 0 3px rgba(255,255,255,.06)}
+.gate input::placeholder{color:#555;letter-spacing:.18em}
+.gate-err{color:#ff7b7b;font-size:13.5px;min-height:22px;margin:12px 0 2px}
+.gate .fine{color:var(--faint);font-size:12px;margin-top:18px;line-height:1.6}
+
+/* ---------- admin ---------- */
+.admin-wrap{max-width:1120px;margin:0 auto;padding:44px 24px 90px;position:relative;z-index:1}
+.admin-head h1{font-size:34px;letter-spacing:-.035em;margin-bottom:6px}
+.admin-head p{color:var(--dim);font-size:14.5px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:30px 0 26px;overflow-x:auto}
+.tab{padding:11px 20px;background:none;border:none;color:var(--dim);font-size:14.5px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap;transition:color .18s}
+.tab:hover{color:#fff}
+.tab.active{color:#fff;border-bottom-color:#fff;font-weight:600}
+.panel{background:linear-gradient(165deg,rgba(255,255,255,.06),rgba(255,255,255,.015));border:1px solid var(--border);border-radius:18px;padding:30px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);margin-bottom:22px;position:relative;overflow:hidden}
+.panel::after{content:"";position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent)}
+.panel h3{font-size:17px;letter-spacing:-.01em;margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{margin-bottom:4px}
+.field.full{grid-column:1/-1}
+.field label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:7px;letter-spacing:.02em}
+.field input,.field textarea,.field select{width:100%;background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:10px;color:#fff;padding:11px 14px;font-size:14.5px;outline:none;transition:border-color .18s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(255,255,255,.4)}
+.field textarea{resize:vertical;min-height:74px}
+.field select option{background:#111}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.25)}
+th{text-align:left;color:var(--faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.1em;padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+td.mono,.mono{font-family:var(--mono)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.dot.green{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7)}
+.dot.gray{background:#5a5a5a}
+.dot.red{background:#ff6b6b;box-shadow:0 0 8px rgba(255,107,107,.6)}
+.code-big{font-family:var(--mono);font-size:30px;letter-spacing:.22em;color:#fff;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.25);border-radius:14px;padding:20px;text-align:center;margin:6px 0 18px;user-select:all}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pin-wrap{min-height:70vh;display:flex;align-items:center;justify-content:center}
+.hint{font-size:12.5px;color:var(--faint);margin-top:10px;line-height:1.6}
+.log-filter{max-width:320px;margin-bottom:16px}
+.countdown{font-family:var(--mono);font-size:13px;color:var(--dim)}
+[hidden]{display:none!important}
+
+@media(max-width:640px){
+  .form-grid{grid-template-columns:1fr}
+  .hero{padding:60px 20px 24px}
+  .grid{grid-template-columns:1fr;padding:20px 20px 70px}
+  .panel{padding:22px 18px}
+  .sess span.name{display:none}
+  .gate{padding:38px 26px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<!-- ==================== ACCESS GATE ==================== -->
+<div id="gate" class="gate-wrap" hidden>
+  <div class="gate">
+    <div class="gate-mark">
+      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+    </div>
+    <h2>Enter access code</h2>
+    <p class="muted">ByteForge is private. Paste the single-use code the owner gave you to step inside.</p>
+    <input id="gateInput" placeholder="XXXX-XXXX" maxlength="17" autocomplete="off" spellcheck="false">
+    <button class="btn btn-primary" id="gateBtn" style="width:100%;margin-top:14px">Unlock ByteForge</button>
+    <div class="gate-err" id="gateErr"></div>
+    <p class="fine">Codes work once, expire on a timer, and every entry is logged.<br>Refresh freely — you'll only be asked again after 20 minutes away.</p>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" hidden>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      ByteForge
+    </a>
+    <div style="flex:1"></div>
+    <span id="sessBadge" class="sess" title="Your session stays alive while you're active. 20 minutes away and you'll need a fresh code."><span class="pulse"></span><span class="name" id="sessName">Guest</span></span>
+    <button class="btn btn-ghost btn-sm" id="lockBtn">Lock</button>
+  </div></nav>
+
+  <header class="hero">
+    <div class="hero-mark">
+      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+    </div>
+    <h1>ByteForge</h1>
+    <p>A private arsenal of tools — forged in the dark, sharpened for speed. Invite-only, always.</p>
+    <div class="hero-rule"></div>
+    <div class="pills" id="pills"></div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <div id="empty" class="empty" hidden>
+    <svg viewBox="0 0 76 65"><path d="M37.9 4 4 61h67.8z"/></svg>
+    <h2>Nothing forged yet</h2>
+    <p>The owner hasn't added any tools to this category.<br>Check back soon — or ask for a different shelf.</p>
+  </div>
+
+  <footer class="footer">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      ByteForge
+    </a>
+    <div>© 2026 ByteForge · Private by design</div>
+  </footer>
+</div>
+
+<!-- ==================== ADMIN PANEL ==================== -->
+<div id="admin" hidden>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/adminp">
+      <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+      ByteForge
+    </a>
+    <span class="nav-badge">Admin</span>
+    <div style="flex:1"></div>
+    <a class="btn btn-ghost btn-sm" href="/">View site</a>
+  </div></nav>
+
+  <div class="admin-wrap">
+    <!-- PIN gate -->
+    <div id="pinGate" class="pin-wrap">
+      <div class="panel" style="width:100%;max-width:430px;margin:0">
+        <div style="text-align:center">
+          <div class="gate-mark" style="margin-bottom:20px">
+            <svg viewBox="0 0 76 65"><path d="M37.9 0 0 65h75.8z"/></svg>
+          </div>
+          <h3 id="pinTitle" style="margin-bottom:8px">Owner access</h3>
+          <p class="muted" id="pinSub" style="color:var(--dim);font-size:13.5px;margin-bottom:22px;line-height:1.6">Enter your owner PIN to manage ByteForge.</p>
+          <input id="pinInput" type="password" inputmode="numeric" placeholder="••••" maxlength="32"
+            style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;color:#fff;padding:14px;font-size:18px;letter-spacing:.3em;text-align:center;outline:none;margin-bottom:14px">
+          <button class="btn btn-primary" id="pinBtn" style="width:100%">Unlock panel</button>
+          <div class="gate-err" id="pinErr"></div>
+          <p class="hint">First visit here? You'll set a PIN — it lives only in this browser (demo-grade lock, not bank security).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin main -->
+    <div id="adminMain" hidden>
+      <div class="admin-head">
+        <h1>Command deck</h1>
+        <p>Add tools, mint single-use access codes, and watch the guest log.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="tools">Tools</button>
+        <button class="tab" data-tab="codes">Access codes</button>
+        <button class="tab" data-tab="logs">Usage logs</button>
+      </div>
+
+      <!-- TOOLS TAB -->
+      <div id="tab-tools">
+        <div class="panel">
+          <h3 id="toolFormTitle">Add a tool</h3>
+          <input type="hidden" id="toolId">
+          <div class="form-grid">
+            <div class="field"><label>Name</label><input id="toolName" placeholder="e.g. Pixel Forge"></div>
+            <div class="field"><label>Category</label><input id="toolCat" placeholder="e.g. design" list="catList"><datalist id="catList"></datalist></div>
+            <div class="field"><label>URL</label><input id="toolUrl" placeholder="https://…"></div>
+            <div class="field"><label>Icon <span style="color:var(--faint)">(emoji or one letter)</span></label><input id="toolIcon" placeholder="⚡" maxlength="4"></div>
+            <div class="field full"><label>Description</label><textarea id="toolDesc" placeholder="One sharp line about what it does."></textarea></div>
+          </div>
+          <div class="row-actions" style="margin-top:18px">
+            <button class="btn btn-primary" id="toolSave">Save tool</button>
+            <button class="btn btn-ghost" id="toolCancel" hidden>Cancel edit</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>All tools <span id="toolCount" style="color:var(--faint);font-weight:400"></span></h3>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Tool</th><th>Category</th><th>URL</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="toolRows"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- CODES TAB -->
+      <div id="tab-codes" hidden>
+        <div class="panel">
+          <h3>Mint a single-use code</h3>
+          <div class="form-grid">
+            <div class="field"><label>For <span style="color:var(--faint)">(who is this for?)</span></label><input id="codeName" placeholder="e.g. Aarav"></div>
+            <div class="field"><label>Expires after <span style="color:var(--faint)">(minutes)</span></label><input id="codeMins" type="number" min="1" value="60"></div>
+          </div>
+          <div class="row-actions" style="margin-top:18px">
+            <button class="btn btn-primary" id="codeGen">Generate code</button>
+          </div>
+          <div id="newCodeBox" hidden style="margin-top:20px">
+            <div class="code-big" id="newCodeVal"></div>
+            <div class="row-actions" style="justify-content:center">
+              <button class="btn btn-ghost btn-sm" id="newCodeCopy">Copy code</button>
+            </div>
+            <p class="hint" style="text-align:center">Send this to one person. It works exactly once, then it's dead.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>All codes</h3>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Code</th><th>For</th><th>Status</th><th>Expires in</th><th>Used at</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="codeRows"></tbody>
+          </table></div>
+          <p class="hint">Expired codes stay listed for your records — delete them whenever you like.</p>
+        </div>
+      </div>
+
+      <!-- LOGS TAB -->
+      <div id="tab-logs" hidden>
+        <div class="panel">
+          <h3>Guest usage history</h3>
+          <div class="field log-filter"><input id="logFilter" placeholder="Filter by code or name…"></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Time</th><th>Code</th><th>Guest</th><th>Event</th></tr></thead>
+            <tbody id="logRows"></tbody>
+          </table></div>
+          <div class="row-actions" style="margin-top:18px">
+            <button class="btn btn-danger btn-sm" id="logClear">Clear all logs</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+/* ============================================================
+   ByteForge — single-file app
+   storage (localStorage = the "database"):
+     byteforge.tools.v1   -> [{id,name,desc,url,cat,icon}]
+     byteforge.codes.v1   -> {CODE: {code,name,createdAt,expiresAt,used,usedAt}}
+     byteforge.logs.v1    -> [{ts,code,name,event}]
+     byteforge.session.v1 -> {code,name,authedAt,lastActive}
+     byteforge.adminpin.v1-> hashed owner PIN
+============================================================ */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
+const slugify = s => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const fmtDT = ts => new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+const fmtClock = ms => {
+  if (ms <= 0) return 'expired';
+  const s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+  if (h > 0) return h + 'h ' + (m % 60) + 'm';
+  if (m > 0) return m + 'm ' + (s % 60) + 's';
+  return s + 's';
+};
+
+const K = {
+  tools:   'byteforge.tools.v1',
+  codes:   'byteforge.codes.v1',
+  logs:    'byteforge.logs.v1',
+  session: 'byteforge.session.v1',
+  pin:     'byteforge.adminpin.v1'
+};
+const DB = {
+  get(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return (v === null || v === undefined) ? fb : v; } catch (e) { return fb; } },
+  set(k, v)  { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k)     { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const GRACE_MS = 20 * 60 * 1000; // 20-minute idle grace
+
+const params = new URLSearchParams(location.search);
+const cleanPath = location.pathname.replace(/\/+$/, '') || '/';
+const IS_ADMIN = /(^|\/)adminp$/.test(cleanPath) || location.hash.indexOf('#/adminp') === 0;
+
+/* ---------------- session ---------------- */
+function getSession() { return DB.get(K.session, null); }
+function sessionAlive() {
+  const s = getSession();
+  return !!(s && (Date.now() - s.lastActive) < GRACE_MS);
+}
+function touchSession() {
+  const s = getSession();
+  if (s) { s.lastActive = Date.now(); DB.set(K.session, s); }
+}
+function killSession() { DB.del(K.session); }
+
+function pushLog(code, name, event) {
+  const logs = DB.get(K.logs, []);
+  logs.unshift({ ts: Date.now(), code: code, name: name, event: event });
+  DB.set(K.logs, logs.slice(0, 2000));
+}
+
+/* ---------------- code helpers ---------------- */
+function genCode() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let p = '';
+  const rnd = new Uint8Array(8);
+  crypto.getRandomValues(rnd);
+  for (let i = 0; i < 8; i++) p += A[rnd[i] % A.length];
+  return p.slice(0, 4) + '-' + p.slice(4);
+}
+function codeStatus(c) {
+  if (c.used) return 'used';
+  if (Date.now() > c.expiresAt) return 'expired';
+  return 'active';
+}
+
+/* ============================================================
+   GATE
+============================================================ */
+function showGate() {
+  $('#gate').hidden = false;
+  $('#app').hidden = true;
+  $('#admin').hidden = true;
+  document.title = 'ByteForge — Locked';
+  const input = $('#gateInput'), err = $('#gateErr');
+  setTimeout(() => input.focus(), 60);
+  const tryRedeem = () => {
+    const raw = input.value.trim().toUpperCase().replace(/\s+/g, '');
+    err.textContent = '';
+    if (!raw) { err.textContent = 'Type the code first.'; return; }
+    const codes = DB.get(K.codes, {});
+    const c = codes[raw];
+    if (!c)               { err.textContent = 'Invalid code. Check it and try again.'; return; }
+    if (c.used)           { err.textContent = 'This code was already used — codes work exactly once.'; return; }
+    if (Date.now() > c.expiresAt) { err.textContent = 'This code has expired. Ask the owner for a fresh one.'; return; }
+    c.used = true; c.usedAt = Date.now();
+    DB.set(K.codes, codes);
+    const name = c.name || 'Guest';
+    DB.set(K.session, { code: raw, name: name, authedAt: Date.now(), lastActive: Date.now() });
+    pushLog(raw, name, 'redeemed');
+    showApp();
+  };
+  $('#gateBtn').onclick = tryRedeem;
+  input.onkeydown = e => { if (e.key === 'Enter') tryRedeem(); };
+}
+
+function showApp() {
+  $('#gate').hidden = true;
+  $('#admin').hidden = true;
+  $('#app').hidden = false;
+  document.title = 'ByteForge — Private Tools';
+  touchSession();
+  renderApp();
+}
+
+/* ============================================================
+   MAIN APP — categories via /?{category}=true|false
+============================================================ */
+function allCategories() {
+  const tools = DB.get(K.tools, []);
+  return Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
+}
+function visibleCategories(cats) {
+  const trues = new Set(), falses = new Set();
+  let any = false;
+  cats.forEach(c => {
+    const slug = slugify(c);
+    if (params.has(slug)) {
+      any = true;
+      const v = (params.get(slug) || '').toLowerCase();
+      if (v === 'false' || v === '0' || v === 'off') falses.add(c); else trues.add(c);
+    }
+  });
+  if (!any) return new Set(cats);
+  if (trues.size) return trues;
+  return new Set(cats.filter(c => !falses.has(c)));
+}
+function isCatActive(slug) {
+  const v = (params.get(slug) || '').toLowerCase();
+  return params.has(slug) && !(v === 'false' || v === '0' || v === 'off');
+}
+
+function renderApp() {
+  const s = getSession();
+  if (s) $('#sessName').textContent = s.name || 'Guest';
+  const tools = DB.get(K.tools, []);
+  const cats = allCategories();
+  const vis = visibleCategories(cats);
+
+  // pills
+  const pills = $('#pills');
+  const noFilter = !cats.some(c => params.has(slugify(c)));
+  let html = '<a class="pill' + (noFilter ? ' active' : '') + '" href="/">All</a>';
+  cats.forEach(c => {
+    const slug = slugify(c);
+    html += '<a class="pill' + (isCatActive(slug) ? ' active' : '') + '" href="/?' + slug + '=true">' + esc(c) + '</a>';
+  });
+  pills.innerHTML = html;
+
+  // cards
+  const shown = tools.filter(t => vis.has(t.cat));
+  const grid = $('#grid');
+  $('#empty').hidden = shown.length > 0;
+  grid.innerHTML = shown.map(t => {
+    const icon = t.icon ? esc(t.icon) : '<svg viewBox="0 0 76 65" style="width:20px;height:18px;fill:#fff"><path d="M37.9 0 0 65h75.8z"/></svg>';
+    return '<a class="card" href="' + esc(t.url) + '" target="_blank" rel="noopener">' +
+      '<div class="card-top"><div class="card-icon">' + icon + '</div>' +
+      (t.cat ? '<span class="card-cat">' + esc(t.cat) + '</span>' : '') + '</div>' +
+      '<h3>' + esc(t.name) + '</h3>' +
+      (t.desc ? '<p>' + esc(t.desc) + '</p>' : '') +
+      '<span class="card-link">Open tool <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>' +
+    '</a>';
+  }).join('');
+
+  // glass spotlight follows the cursor
+  $$('.card').forEach(card => {
+    card.addEventListener('pointermove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+    });
+  });
+}
+
+$('#lockBtn').addEventListener('click', () => {
+  const s = getSession();
+  if (s) pushLog(s.code, s.name, 'locked out');
+  killSession();
+  location.reload();
+});
+
+/* ============================================================
+   ADMIN  (/adminp)
+============================================================ */
+function pinHash(pin) {
+  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (let i = 0; i < pin.length; i++) {
+    h1 = Math.imul(h1 ^ pin.charCodeAt(i), 16777619);
+    h2 = Math.imul(h2 + pin.charCodeAt(i), 31);
+  }
+  return 'p' + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
+}
+let adminAuthed = sessionStorage.getItem('byteforge.admin') === '1';
+
+function showAdmin() {
+  $('#gate').hidden = true;
+  $('#app').hidden = true;
+  $('#admin').hidden = false;
+  document.title = 'ByteForge — Admin';
+  if (adminAuthed) { unlockAdminUI(); } else { wirePinGate(); }
+}
+
+function wirePinGate() {
+  $('#pinGate').hidden = false;
+  $('#adminMain').hidden = true;
+  const hasPin = !!DB.get(K.pin, null);
+  if (!hasPin) {
+    $('#pinTitle').textContent = 'Set your owner PIN';
+    $('#pinSub').textContent = 'First time here — choose a PIN. You\'ll need it every time you open /adminp.';
+    $('#pinBtn').textContent = 'Set PIN & enter';
+  }
+  const input = $('#pinInput'), err = $('#pinErr');
+  setTimeout(() => input.focus(), 60);
+  const go = () => {
+    const v = input.value.trim();
+    err.textContent = '';
+    if (v.length < 4) { err.textContent = 'PIN needs at least 4 characters.'; return; }
+    if (!hasPin) {
+      DB.set(K.pin, pinHash(v));
+      pushLog('—', 'owner', 'admin PIN set');
+    } else if (DB.get(K.pin, null) !== pinHash(v)) {
+      err.textContent = 'Wrong PIN. Try again.';
+      return;
+    }
+    sessionStorage.setItem('byteforge.admin', '1');
+    adminAuthed = true;
+    unlockAdminUI();
+  };
+  $('#pinBtn').onclick = go;
+  input.onkeydown = e => { if (e.key === 'Enter') go(); };
+}
+
+function unlockAdminUI() {
+  $('#pinGate').hidden = true;
+  $('#adminMain').hidden = false;
+  $$('.tab').forEach(t => t.onclick = () => {
+    $$('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    ['tools', 'codes', 'logs'].forEach(k => $('#tab-' + k).hidden = (k !== t.dataset.tab));
+  });
+  renderToolAdmin();
+  renderCodes();
+  renderLogs();
+  setInterval(tickCountdowns, 1000);
+}
+
+/* ---------- tools CRUD ---------- */
+function renderToolAdmin() {
+  const tools = DB.get(K.tools, []);
+  $('#toolCount').textContent = tools.length ? '· ' + tools.length : '';
+  $('#catList').innerHTML = allCategories().map(c => '<option value="' + esc(c) + '">').join('');
+  $('#toolRows').innerHTML = tools.length ? tools.map(t =>
+    '<tr><td><strong>' + esc(t.name) + '</strong>' + (t.desc ? '<div style="color:var(--faint);font-size:12.5px;margin-top:3px;max-width:340px">' + esc(t.desc) + '</div>' : '') + '</td>' +
+    '<td>' + esc(t.cat || '—') + '</td>' +
+    '<td class="mono" style="font-size:12.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="' + esc(t.url) + '" target="_blank" rel="noopener" style="color:var(--dim)">' + esc(t.url) + '</a></td>' +
+    '<td style="text-align:right"><div class="row-actions" style="justify-content:flex-end">' +
+      '<button class="btn btn-ghost btn-sm" data-edit="' + t.id + '">Edit</button>' +
+      '<button class="btn btn-danger btn-sm" data-del="' + t.id + '">Delete</button>' +
+    '</div></td></tr>'
+  ).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:34px">No tools yet — add your first one above.</td></tr>';
+  $$('#toolRows [data-edit]').forEach(b => b.onclick = () => editTool(b.dataset.edit));
+  $$('#toolRows [data-del]').forEach(b => b.onclick = () => delTool(b.dataset.del));
+}
+
+function resetToolForm() {
+  $('#toolId').value = ''; $('#toolName').value = ''; $('#toolCat').value = '';
+  $('#toolUrl').value = ''; $('#toolIcon').value = ''; $('#toolDesc').value = '';
+  $('#toolFormTitle').textContent = 'Add a tool';
+  $('#toolCancel').hidden = true;
+}
+$('#toolSave').addEventListener('click', () => {
+  const name = $('#toolName').value.trim(), url = $('#toolUrl').value.trim();
+  if (!name || !url) { alert('Name and URL are required.'); return; }
+  const tools = DB.get(K.tools, []);
+  const data = {
+    name: name,
+    cat: $('#toolCat').value.trim(),
+    url: url.match(/^https?:\/\//i) ? url : 'https://' + url,
+    icon: $('#toolIcon').value.trim(),
+    desc: $('#toolDesc').value.trim()
+  };
+  const id = $('#toolId').value;
+  if (id) {
+    const i = tools.findIndex(t => t.id === id);
+    if (i > -1) tools[i] = Object.assign({}, tools[i], data);
+    pushLog('—', 'owner', 'edited tool "' + name + '"');
+  } else {
+    data.id = uid();
+    tools.unshift(data);
+    pushLog('—', 'owner', 'added tool "' + name + '"');
+  }
+  DB.set(K.tools, tools);
+  resetToolForm();
+  renderToolAdmin();
+});
+$('#toolCancel').addEventListener('click', resetToolForm);
+
+function editTool(id) {
+  const t = DB.get(K.tools, []).find(x => x.id === id);
+  if (!t) return;
+  $('#toolId').value = t.id;
+  $('#toolName').value = t.name || '';
+  $('#toolCat').value = t.cat || '';
+  $('#toolUrl').value = t.url || '';
+  $('#toolIcon').value = t.icon || '';
+  $('#toolDesc').value = t.desc || '';
+  $('#toolFormTitle').textContent = 'Edit tool';
+  $('#toolCancel').hidden = false;
+  $('#toolName').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function delTool(id) {
+  const tools = DB.get(K.tools, []);
+  const t = tools.find(x => x.id === id);
+  if (!t || !confirm('Delete "' + t.name + '"?')) return;
+  DB.set(K.tools, tools.filter(x => x.id !== id));
+  pushLog('—', 'owner', 'deleted tool "' + t.name + '"');
+  renderToolAdmin();
+}
+
+/* ---------- access codes ---------- */
+$('#codeGen').addEventListener('click', () => {
+  const name = $('#codeName').value.trim() || 'Guest';
+  const mins = Math.max(1, parseInt($('#codeMins').value, 10) || 60);
+  const codes = DB.get(K.codes, {});
+  let code = genCode();
+  while (codes[code]) code = genCode();
+  codes[code] = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
+  DB.set(K.codes, codes);
+  pushLog(code, name, 'code minted (' + mins + 'm)');
+  $('#newCodeVal').textContent = code;
+  $('#newCodeBox').hidden = false;
+  $('#codeName').value = '';
+  renderCodes();
+});
+$('#newCodeCopy').addEventListener('click', () => copyText($('#newCodeVal').textContent, $('#newCodeCopy')));
+
+function renderCodes() {
+  const codes = DB.get(K.codes, {});
+  const list = Object.values(codes).sort((a, b) => b.createdAt - a.createdAt);
+  $('#codeRows').innerHTML = list.length ? list.map(c => {
+    const st = codeStatus(c);
+    const dot = st === 'active' ? '<span class="dot green"></span>Active' : st === 'used' ? '<span class="dot gray"></span>Used' : '<span class="dot red"></span>Expired';
+    return '<tr><td class="mono" style="font-size:15px;letter-spacing:.08em"><strong>' + esc(c.code) + '</strong></td>' +
+      '<td>' + esc(c.name || 'Guest') + '</td>' +
+      '<td>' + dot + '</td>' +
+      '<td><span class="countdown" data-exp="' + c.expiresAt + '" data-used="' + (c.used ? 1 : 0) + '">' + esc(fmtClock(c.expiresAt - Date.now())) + '</span></td>' +
+      '<td style="color:var(--dim);font-size:13px">' + (c.usedAt ? fmtDT(c.usedAt) : '—') + '</td>' +
+      '<td style="text-align:right"><div class="row-actions" style="justify-content:flex-end">' +
+        '<button class="btn btn-ghost btn-sm" data-copy="' + esc(c.code) + '">Copy</button>' +
+        '<button class="btn btn-danger btn-sm" data-delcode="' + esc(c.code) + '">Delete</button>' +
+      '</div></td></tr>';
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--faint);padding:34px">No codes yet — mint one above and hand it to a single person.</td></tr>';
+  $$('#codeRows [data-copy]').forEach(b => b.onclick = () => copyText(b.dataset.copy, b));
+  $$('#codeRows [data-delcode]').forEach(b => b.onclick = () => {
+    if (!confirm('Delete code ' + b.dataset.delcode + '?')) return;
+    const cs = DB.get(K.codes, {});
+    delete cs[b.dataset.delcode];
+    DB.set(K.codes, cs);
+    renderCodes();
+  });
+}
+
+function tickCountdowns() {
+  let changed = false;
+  $$('.countdown').forEach(el => {
+    if (el.dataset.used === '1' || el.dataset.done === '1') return;
+    const left = parseInt(el.dataset.exp, 10) - Date.now();
+    el.textContent = fmtClock(left);
+    if (left <= 0) { el.dataset.done = '1'; changed = true; }
+  });
+  if (changed) renderCodes();
+}
+
+function copyText(text, btn) {
+  const done = () => { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => btn.textContent = o, 1400); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(done);
+  else { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); done(); }
+}
+
+/* ---------- usage logs ---------- */
+function renderLogs() {
+  const q = ($('#logFilter').value || '').trim().toLowerCase();
+  const logs = DB.get(K.logs, []).filter(l =>
+    !q || (l.code || '').toLowerCase().indexOf(q) > -1 || (l.name || '').toLowerCase().indexOf(q) > -1);
+  $('#logRows').innerHTML = logs.length ? logs.map(l =>
+    '<tr><td style="color:var(--dim);white-space:nowrap">' + fmtDT(l.ts) + '</td>' +
+    '<td class="mono" style="letter-spacing:.06em">' + esc(l.code || '—') + '</td>' +
+    '<td>' + esc(l.name || '—') + '</td>' +
+    '<td>' + esc(l.event) + '</td></tr>'
+  ).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:34px">No activity logged yet.</td></tr>';
+}
+$('#logFilter').addEventListener('input', renderLogs);
+$('#logClear').addEventListener('click', () => {
+  if (!confirm('Clear the entire usage log?')) return;
+  DB.set(K.logs, []);
+  renderLogs();
+});
+
+/* ============================================================
+   BOOT
+============================================================ */
+(function boot() {
+  if (IS_ADMIN) { showAdmin(); return; }
+  if (sessionAlive()) { showApp(); }
+  else { killSession(); showGate(); }
+  // heartbeat: keep the 20-min window sliding while the tab is alive
+  setInterval(() => { if (sessionAlive()) touchSession(); }, 30000);
+  window.addEventListener('pagehide', () => { if (sessionAlive()) touchSession(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && sessionAlive()) touchSession(); });
+})();
+</script>
+</body>
+</html>
