@@ -1,4 +1,4 @@
-import { kv, requireOwner, readBody, genCode } from './_lib.js';
+import { kv, requireOwner, readBody, genCode, normCode } from './_lib.js';
 
 const KEY = 'bf:codes';
 const parse = (v) => { try { return JSON.parse(v); } catch (e) { return null; } };
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       const body = await readBody(req);
       const mins = Math.max(1, parseInt(body.minutes, 10) || 60);
       let code = genCode(), guard = 0;
-      while ((await kv.hget(KEY, code)) && guard++ < 20) code = genCode();
+      while ((await kv.hget(KEY, normCode(code))) && guard++ < 20) code = genCode();
       const c = {
         code,
         name: String(body.name || 'Guest').slice(0, 60),
@@ -27,12 +27,14 @@ export default async function handler(req, res) {
         used: false,
         usedAt: null,
       };
-      await kv.hset(KEY, code, c);
+      await kv.hset(KEY, normCode(code), c);
       return res.status(200).json({ code });
     }
     if (req.method === 'DELETE') {
       if (!requireOwner(req, res)) return;
-      await kv.hdel(KEY, String(req.query.code || ''));
+      const delKey = normCode(String(req.query.code || ''));
+      await kv.hdel(KEY, delKey);
+      if (delKey.length === 8) await kv.hdel(KEY, delKey.slice(0, 4) + '-' + delKey.slice(4)); // legacy
       return res.status(200).json({ ok: true });
     }
     res.status(405).json({ error: 'method not allowed' });
