@@ -14,14 +14,20 @@ export default async function handler(req, res) {
     }
 
     const code = normCode(typed);
-    const raw = await kv.hget('bf:codes', code);
+    let foundKey = code;
+    let raw = await kv.hget('bf:codes', code);
+    if (!raw && code.length === 8) {
+      // legacy keys minted with the dash in the hash field
+      foundKey = code.slice(0, 4) + '-' + code.slice(4);
+      raw = await kv.hget('bf:codes', foundKey);
+    }
     if (!raw) return res.status(200).json({ ok: false, error: 'Invalid code. Check it and try again.' });
     const c = JSON.parse(raw);
     if (c.used) return res.status(200).json({ ok: false, error: 'This code was already used — codes work exactly once.' });
     if (Date.now() > c.expiresAt) return res.status(200).json({ ok: false, error: 'This code has expired. Ask the owner for a fresh one.' });
     c.used = true;
     c.usedAt = Date.now();
-    await kv.hset('bf:codes', code, c);
+    await kv.hset('bf:codes', foundKey, c);
     await pushLog(code, c.name || 'Guest', 'redeemed');
     return res.status(200).json({ ok: true, owner: false, name: c.name || 'Guest', code });
   } catch (e) {
