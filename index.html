@@ -531,7 +531,7 @@ async function detectServer() {
 }
 const ownerHeaders = () => ({ 'Content-Type': 'application/json', 'x-owner-key': OWNER_KEY });
 async function api(path, opts) {
-  const r = await fetch('/api' + path, opts);
+  const r = await fetch('/api' + path, Object.assign({ cache: 'no-store' }, opts || {}));
   if (!r.ok) { let t = ''; try { t = await r.text(); } catch (e) {} throw new Error(t || ('HTTP ' + r.status)); }
   return r.json();
 }
