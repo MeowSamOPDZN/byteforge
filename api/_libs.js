@@ -4,8 +4,8 @@
 //   KV_REST_API_URL, KV_REST_API_TOKEN
 // Optional: OWNER_KEY (defaults to the lifetime owner key below).
 
-const KV_URL = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
 export const OWNER_KEY = process.env.OWNER_KEY || 'HardikSri@123';
 
@@ -72,7 +72,9 @@ export function genCode() {
 }
 
 export function normCode(s) {
-  return String(s || '').trim().toUpperCase().replace(/\s+/g, '');
+  // Guest codes: case-insensitive, dashes/spaces optional ("abcd1234" == "ABCD-1234").
+  // The owner key is checked separately with exact case BEFORE this ever runs.
+  return String(s || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
 export async function pushLog(code, name, event) {
