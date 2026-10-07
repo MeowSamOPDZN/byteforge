@@ -246,7 +246,7 @@ td.mono,.mono{font-family:var(--mono)}
     <input id="gateInput" placeholder="XXXX-XXXX" maxlength="17" autocomplete="off" spellcheck="false">
     <button class="btn btn-primary" id="gateBtn" style="width:100%;margin-top:14px">Unlock ByteForge</button>
     <div class="gate-err" id="gateErr"></div>
-    <p class="fine">Codes work once, expire on a timer, and every entry is logged.<br>Refresh freely — you'll only be asked again after 20 minutes away.</p>
+    <p class="fine">Codes work once, expire on a timer, and every entry is logged.<br>Type with or without the dash — upper or lower case, both fine.<br>Refresh freely — you'll only be asked again after 20 minutes away.</p>
   </div>
 </div>
 
@@ -563,12 +563,15 @@ const Store = {
   async mintCode(name, mins) {
     if (SERVER) return api('/codes', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify({ name: name, minutes: mins }) });
     const codes = DB.get(K.codes, {}); let code = genCode(); while (codes[code]) code = genCode();
-    codes[code] = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
+    const key = code.replace(/[^A-Z0-9]/g, ''); // stored dashless; displayed with dash
+    codes[key] = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
     DB.set(K.codes, codes); return { code: code };
   },
   async deleteCode(code) {
     if (SERVER) return api('/codes?code=' + encodeURIComponent(code), { method: 'DELETE', headers: ownerHeaders() });
-    const cs = DB.get(K.codes, {}); delete cs[code]; DB.set(K.codes, cs);
+    const cs = DB.get(K.codes, {}); const k = String(code).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    delete cs[k]; if (k.length === 8) delete cs[k.slice(0, 4) + '-' + k.slice(4)]; // legacy dashed keys
+    DB.set(K.codes, cs);
   },
   /* code redemption — server marks single-use globally so a key works on any device */
   async redeem(code) {
@@ -581,9 +584,9 @@ const Store = {
       if (j && j.ok) return { owner: false, name: j.name || 'Guest', code: j.code || String(code).trim().toUpperCase().replace(/\s+/g, '') };
       throw new Error((j && j.error) || 'Redeem failed');
     }
-    const raw = String(code).trim().toUpperCase().replace(/\s+/g, '');
+    const raw = String(code).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const codes = DB.get(K.codes, {});
-    const c = codes[raw];
+    const c = codes[raw] || (raw.length === 8 ? codes[raw.slice(0, 4) + '-' + raw.slice(4)] : null); // legacy dashed keys
     if (!c) throw new Error('Invalid code. Check it and try again.');
     if (c.used) throw new Error('This code was already used — codes work exactly once.');
     if (Date.now() > c.expiresAt) throw new Error('This code has expired. Ask the owner for a fresh one.');
@@ -734,7 +737,7 @@ function showGate(mode) {
         return;
       }
       const r = await Store.redeem(typed);
-      const code = r.code || typed.toUpperCase().replace(/\s+/g, '');
+      const code = r.code || typed.toUpperCase().replace(/[^A-Z0-9]/g, '');
       DB.set(K.session, { code: code, name: r.name || 'Guest', authedAt: Date.now(), lastActive: Date.now() });
       await Store.pushLog(code, r.name || 'Guest', 'redeemed');
       showApp();
