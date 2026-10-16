@@ -403,6 +403,10 @@ td.mono,.mono{font-family:var(--mono)}
             <thead><tr><th>Tool</th><th>Category</th><th>Imgs</th><th>URL</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody id="toolRows"></tbody>
           </table></div>
+          <div class="row-actions" style="margin-top:18px">
+            <button class="btn btn-ghost btn-sm" id="importLocal">Import this browser's data → Firebase</button>
+          </div>
+          <p class="hint">One-time move: copies tools + unused codes stored in this browser into Firebase.</p>
         </div>
       </div>
 
@@ -470,12 +474,15 @@ td.mono,.mono{font-family:var(--mono)}
             <button class="btn btn-ghost" id="aiTest">Test connection</button>
           </div>
           <div class="gate-err" id="aiMsg" style="min-height:22px;margin-top:12px"></div>
-          <p class="hint">In server mode the key stays on the server (never shipped to guests). In local-only mode the browser calls the API directly — the key lives in this browser.</p>
+          <p class="hint">No server proxy: the browser calls your AI API directly, so treat this key as visible to anyone past the gate — use a key with spending limits. Chat counts are enforced per browser.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 'use strict';
 /* ============================================================
@@ -516,24 +523,52 @@ const DB = {
 };
 const GRACE_MS = 20 * 60 * 1000; // 20-minute idle grace
 
-/* Owner lifetime key — works on every device. For hardened deployments set
-   the OWNER_KEY env var on the server; the literal below is the fallback. */
+/* Owner lifetime key — exact case required, works on every device.
+   It ships in this file's JS (the gate is the real boundary); the same
+   literal must appear in the Firestore rules for owner-proofed writes. */
 const OWNER_KEY = 'HardikSri@123';
 
-/* ---------------- backend (Vercel Functions + KV) with local fallback ---------------- */
-let SERVER = false; // true when /api/health reports a live KV
-async function detectServer() {
+/* ---------------- backend: Firebase Firestore (cross-device) with local fallback ----------------
+   Firebase web API keys are public by design — real security lives in the
+   Firestore rules (see the rules block in the delivery notes). */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAdqk2XLA8mo0_ejHiVhwGJ_fm0FrG5IOQ",
+  authDomain: "meowsyai-dc6f2.firebaseapp.com",
+  projectId: "meowsyai-dc6f2",
+  storageBucket: "meowsyai-dc6f2.firebasestorage.app",
+  messagingSenderId: "668131859736",
+  appId: "1:668131859736:web:23ee8e9080d9592752126d"
+};
+// Owner-proof stamped on every owner-written doc (checked by Firestore rules).
+const KPROOF = OWNER_KEY;
+
+let FB = null;       // {db, uid} when Firebase is live
+let FB_ERROR = '';   // hint shown in the admin banner when Firebase is down
+
+async function initBackend() {
+  FB = null; FB_ERROR = '';
   try {
-    const r = await fetch('/api/health', { cache: 'no-store' });
-    if (r.ok) { const j = await r.json(); if (j && j.kv) { SERVER = true; return; } }
-  } catch (e) {}
-  SERVER = false;
+    if (typeof firebase === 'undefined' || !firebase.firestore) throw new Error('sdk');
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const cred = await auth.signInAnonymously();
+    const db = firebase.firestore();
+    await db.collection('tools').orderBy('createdAt', 'desc').limit(1).get(); // probe: db + rules
+    FB = { db: db, uid: cred.user.uid };
+    return true;
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    if (/operation-not-allowed/.test(msg)) FB_ERROR = 'Anonymous sign-in is OFF — enable it in Firebase console > Authentication > Sign-in method.';
+    else if (/permission-denied/.test(msg)) FB_ERROR = 'Firestore rules are blocking reads — paste the ByteForge rules in Firestore > Rules and Publish.';
+    else if (/sdk/.test(msg)) FB_ERROR = 'Firebase SDK failed to load (CDN blocked?).';
+    else FB_ERROR = 'Firestore not reachable — is the database created? (' + msg.slice(0, 90) + ')';
+    return false;
+  }
 }
-const ownerHeaders = () => ({ 'Content-Type': 'application/json', 'x-owner-key': OWNER_KEY });
-async function api(path, opts) {
-  const r = await fetch('/api' + path, Object.assign({ cache: 'no-store' }, opts || {}));
-  if (!r.ok) { let t = ''; try { t = await r.text(); } catch (e) {} throw new Error(t || ('HTTP ' + r.status)); }
-  return r.json();
+function fbCol(name) { return FB.db.collection(name); }
+function stripK(o) {
+  if (o && typeof o === 'object' && 'k' in o) { const c = Object.assign({}, o); delete c.k; return c; }
+  return o;
 }
 function localLog(code, name, event) {
   const logs = DB.get(K.logs, []);
@@ -543,100 +578,177 @@ function localLog(code, name, event) {
 
 const Store = {
   /* ---- tools ---- */
-  async tools()      { return SERVER ? api('/tools') : DB.get(K.tools, []); },
+  async tools() {
+    if (!FB) return DB.get(K.tools, []);
+    const s = await fbCol('tools').orderBy('createdAt', 'desc').get();
+    return s.docs.map(d => Object.assign({ id: d.id }, stripK(d.data())));
+  },
   async tool(id)     { const ts = await this.tools(); return ts.find(t => t.id === id) || null; },
   async addTool(d) {
-    if (SERVER) return api('/tools', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify(d) });
-    const ts = DB.get(K.tools, []); d.id = uid(); d.createdAt = Date.now(); ts.unshift(d); DB.set(K.tools, ts); return d;
+    if (!FB) { const ts = DB.get(K.tools, []); d.id = uid(); d.createdAt = Date.now(); ts.unshift(d); DB.set(K.tools, ts); return d; }
+    const ref = await fbCol('tools').add(Object.assign({}, d, { createdAt: Date.now(), k: KPROOF }));
+    return Object.assign({ id: ref.id }, d);
   },
   async updateTool(id, d) {
-    if (SERVER) return api('/tools?id=' + encodeURIComponent(id), { method: 'PUT', headers: ownerHeaders(), body: JSON.stringify(d) });
-    const ts = DB.get(K.tools, []); const i = ts.findIndex(t => t.id === id);
-    if (i > -1) { ts[i] = Object.assign({}, ts[i], d); DB.set(K.tools, ts); } return ts[i] || null;
+    if (!FB) { const ts = DB.get(K.tools, []); const i = ts.findIndex(t => t.id === id); if (i > -1) { ts[i] = Object.assign({}, ts[i], d); DB.set(K.tools, ts); } return ts[i] || null; }
+    await fbCol('tools').doc(id).update(Object.assign({}, d, { k: KPROOF }));
+    return Object.assign({ id: id }, d);
   },
   async deleteTool(id) {
-    if (SERVER) return api('/tools?id=' + encodeURIComponent(id), { method: 'DELETE', headers: ownerHeaders() });
-    DB.set(K.tools, DB.get(K.tools, []).filter(t => t.id !== id));
+    if (!FB) { DB.set(K.tools, DB.get(K.tools, []).filter(t => t.id !== id)); return; }
+    await fbCol('tools').doc(id).delete();
   },
-  /* ---- codes ---- */
-  async codes()      { return SERVER ? api('/codes', { headers: ownerHeaders() }) : Object.values(DB.get(K.codes, {})).sort((a,b) => b.createdAt - a.createdAt); },
+  /* ---- codes ----
+     The codes collection is never listed (rules deny it) so guests can't
+     enumerate unused codes. The admin keeps a per-browser ledger of minted
+     codes and refreshes each one's live status individually. */
+  async codes() {
+    if (!FB) return Object.values(DB.get(K.codes, {})).sort((a, b) => b.createdAt - a.createdAt);
+    const ledger = DB.get('byteforge.minted.v1', []);
+    const out = [];
+    for (const code of ledger) {
+      try {
+        const snap = await fbCol('codes').doc(String(code).toUpperCase().replace(/[^A-Z0-9]/g, '')).get();
+        if (snap.exists) out.push(Object.assign({ code: code }, stripK(snap.data())));
+      } catch (e) {}
+    }
+    return out.sort((a, b) => b.createdAt - a.createdAt);
+  },
   async mintCode(name, mins) {
-    if (SERVER) return api('/codes', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify({ name: name, minutes: mins }) });
-    const codes = DB.get(K.codes, {}); let code = genCode(); while (codes[code]) code = genCode();
-    const key = code.replace(/[^A-Z0-9]/g, ''); // stored dashless; displayed with dash
-    codes[key] = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
-    DB.set(K.codes, codes); return { code: code };
+    const code = genCode();
+    const rec = { code: code, name: name, createdAt: Date.now(), expiresAt: Date.now() + mins * 60000, used: false, usedAt: null };
+    if (!FB) {
+      const codes = DB.get(K.codes, {}); const key = code.replace(/[^A-Z0-9]/g, '');
+      codes[key] = rec; DB.set(K.codes, codes);
+    } else {
+      await fbCol('codes').doc(code.replace(/[^A-Z0-9]/g, '')).set(Object.assign({}, rec, { k: KPROOF }));
+      const ledger = DB.get('byteforge.minted.v1', []);
+      if (ledger.indexOf(code) < 0) { ledger.unshift(code); DB.set('byteforge.minted.v1', ledger.slice(0, 500)); }
+    }
+    return { code: code };
   },
   async deleteCode(code) {
-    if (SERVER) return api('/codes?code=' + encodeURIComponent(code), { method: 'DELETE', headers: ownerHeaders() });
-    const cs = DB.get(K.codes, {}); const k = String(code).toUpperCase().replace(/[^A-Z0-9]/g, '');
-    delete cs[k]; if (k.length === 8) delete cs[k.slice(0, 4) + '-' + k.slice(4)]; // legacy dashed keys
-    DB.set(K.codes, cs);
+    const norm = String(code).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!FB) {
+      const cs = DB.get(K.codes, {}); delete cs[norm];
+      if (norm.length === 8) delete cs[norm.slice(0, 4) + '-' + norm.slice(4)]; // legacy dashed keys
+      DB.set(K.codes, cs);
+    } else {
+      try { await fbCol('codes').doc(norm).delete(); } catch (e) {}
+    }
+    const ledger = DB.get('byteforge.minted.v1', []);
+    DB.set('byteforge.minted.v1', ledger.filter(c => c !== code && c.replace(/[^A-Z0-9]/g, '') !== norm));
   },
-  /* code redemption — server marks single-use globally so a key works on any device */
+  /* code redemption — Firestore transaction marks single-use atomically,
+     so a key works once across every device on earth */
   async redeem(code) {
-    if (code === OWNER_KEY) {
-      if (SERVER) { try { const j = await api('/redeem', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code }) }); if (j && j.ok && j.owner) return { owner: true, name: 'Owner' }; } catch (e) {} }
-      return { owner: true, name: 'Owner' };
+    const typed = String(code).trim();
+    if (typed === OWNER_KEY) return { owner: true, name: 'Owner' };
+    const norm = typed.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!norm) throw new Error('Invalid code. Check it and try again.');
+    if (!FB) {
+      const codes = DB.get(K.codes, {});
+      const c = codes[norm] || (norm.length === 8 ? codes[norm.slice(0, 4) + '-' + norm.slice(4)] : null); // legacy dashed keys
+      if (!c) throw new Error('Invalid code. Check it and try again.');
+      if (c.used) throw new Error('This code was already used — codes work exactly once.');
+      if (Date.now() > c.expiresAt) throw new Error('This code has expired. Ask the owner for a fresh one.');
+      c.used = true; c.usedAt = Date.now(); DB.set(K.codes, codes);
+      return { owner: false, name: c.name || 'Guest', code: norm };
     }
-    if (SERVER) {
-      const j = await api('/redeem', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code }) });
-      if (j && j.ok) return { owner: false, name: j.name || 'Guest', code: j.code || String(code).trim().toUpperCase().replace(/\s+/g, '') };
-      throw new Error((j && j.error) || 'Redeem failed');
-    }
-    const raw = String(code).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const codes = DB.get(K.codes, {});
-    const c = codes[raw] || (raw.length === 8 ? codes[raw.slice(0, 4) + '-' + raw.slice(4)] : null); // legacy dashed keys
-    if (!c) throw new Error('Invalid code. Check it and try again.');
-    if (c.used) throw new Error('This code was already used — codes work exactly once.');
-    if (Date.now() > c.expiresAt) throw new Error('This code has expired. Ask the owner for a fresh one.');
-    c.used = true; c.usedAt = Date.now(); DB.set(K.codes, codes);
-    return { owner: false, name: c.name || 'Guest', code: raw };
+    const ref = fbCol('codes').doc(norm);
+    const name = await FB.db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new Error('Invalid code. Check it and try again.');
+      const c = snap.data();
+      if (c.used) throw new Error('This code was already used — codes work exactly once.');
+      if (Date.now() > c.expiresAt) throw new Error('This code has expired. Ask the owner for a fresh one.');
+      tx.update(ref, { used: true, usedAt: Date.now() });
+      return c.name || 'Guest';
+    });
+    return { owner: false, name: name, code: norm };
   },
   /* ---- logs ---- */
-  async logs()       { return SERVER ? api('/logs', { headers: ownerHeaders() }) : DB.get(K.logs, []); },
+  async logs() {
+    if (!FB) return DB.get(K.logs, []);
+    const s = await fbCol('logs').orderBy('ts', 'desc').limit(200).get();
+    return s.docs.map(d => stripK(d.data()));
+  },
   async pushLog(code, name, event) {
-    if (SERVER) { try { await api('/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code, name: name, event: event }) }); } catch (e) {} return; }
-    localLog(code, name, event);
+    const rec = { ts: Date.now(), code: code, name: name, event: event };
+    if (!FB) { localLog(code, name, event); return; }
+    try { await fbCol('logs').add(Object.assign({}, rec, { k: KPROOF })); } catch (e) {}
   },
   async clearLogs() {
-    if (SERVER) return api('/logs', { method: 'DELETE', headers: ownerHeaders() });
-    DB.set(K.logs, []);
+    if (!FB) { DB.set(K.logs, []); return; }
+    const s = await fbCol('logs').limit(500).get();
+    const batch = FB.db.batch();
+    s.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
   },
-  /* ---- AI ---- */
+  /* ---- AI (no server proxy: the browser calls the AI API directly,
+         same as the old local-only mode) ---- */
   async aiPublic() {
-    if (SERVER) { try { return await api('/ai-config?public=1'); } catch (e) { return { enabled: false }; } }
-    const c = DB.get(K.ai, { enabled: false }); return { enabled: !!c.enabled, configured: !!(c.endpoint && c.apiKey), guestLimit: c.guestLimit || 10 };
+    if (!FB) { const c = DB.get(K.ai, { enabled: false }); return { enabled: !!c.enabled, configured: !!(c.endpoint && c.apiKey), guestLimit: c.guestLimit || 10 }; }
+    try {
+      const snap = await fbCol('config').doc('ai').get();
+      const c = snap.exists ? snap.data() : {};
+      return { enabled: !!c.enabled, configured: !!(c.endpoint && c.apiKey), guestLimit: c.guestLimit || 10 };
+    } catch (e) { return { enabled: false }; }
   },
   async aiConfig() {
-    if (SERVER) return api('/ai-config', { headers: ownerHeaders() });
-    const c = DB.get(K.ai, {}); return Object.assign({ enabled: false, endpoint: '', apiKey: '', model: '', guestLimit: 10 }, c);
+    if (!FB) { const c = DB.get(K.ai, {}); return Object.assign({ enabled: false, endpoint: '', apiKey: '', model: '', guestLimit: 10 }, c); }
+    const snap = await fbCol('config').doc('ai').get();
+    const c = snap.exists ? stripK(snap.data()) : {};
+    return Object.assign({ enabled: false, endpoint: '', apiKey: '', model: '', guestLimit: 10 }, c);
   },
   async saveAiConfig(c) {
-    if (SERVER) return api('/ai-config', { method: 'POST', headers: ownerHeaders(), body: JSON.stringify(c) });
-    DB.set(K.ai, c); return { ok: true };
+    if (!FB) { DB.set(K.ai, c); return { ok: true }; }
+    await fbCol('config').doc('ai').set(Object.assign({}, c, { k: KPROOF }));
+    return { ok: true };
   },
   async testAi() {
-    if (SERVER) return api('/ai-config?test=1', { method: 'POST', headers: ownerHeaders() });
-    const c = DB.get(K.ai, {});
+    const c = await this.aiConfig();
     if (!c.endpoint || !c.apiKey) throw new Error('Set the API endpoint and key first.');
     await chatDirect(c, 'Reply with the single word: online');
     return { ok: true };
   },
   async aiRemaining(guestId, owner) {
     if (owner) return Infinity;
-    if (SERVER) { try { const j = await api('/ai-chat?remaining=1&guestId=' + encodeURIComponent(guestId)); return j.remaining; } catch (e) { return null; } }
-    const c = DB.get(K.ai, {}); const used = parseInt(localStorage.getItem('byteforge.ai.use.' + guestId) || '0', 10);
-    return Math.max(0, (c.guestLimit || 10) - used);
+    if (!FB) { const c = DB.get(K.ai, {}); const used = parseInt(localStorage.getItem('byteforge.ai.use.' + guestId) || '0', 10); return Math.max(0, (c.guestLimit || 10) - used); }
+    try {
+      const snap = await fbCol('aiUsage').doc(FB.uid).get();
+      const used = snap.exists ? (snap.data().used || 0) : 0;
+      const pub = await this.aiPublic();
+      return Math.max(0, (pub.guestLimit || 10) - used);
+    } catch (e) { return null; }
   },
   async aiChat(message, guestId, owner) {
-    if (SERVER) return api('/ai-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message, guestId: guestId, owner: !!owner }) });
-    const c = DB.get(K.ai, {});
+    const c = await this.aiConfig();
+    if (!c.enabled) throw new Error('The AI switch is off.');
+    if (!c.endpoint || !c.apiKey) throw new Error('AI API is not connected.');
+    let remaining = Infinity;
+    if (!owner) {
+      if (!FB) {
+        const key = 'byteforge.ai.use.' + guestId;
+        const used = parseInt(localStorage.getItem(key) || '0', 10);
+        const limit = c.guestLimit || 10;
+        if (used >= limit) throw new Error('You are out of chats. Ask the owner for more.');
+        const reply = await chatDirect(c, message);
+        localStorage.setItem(key, String(used + 1));
+        return { reply: reply, remaining: Math.max(0, limit - used - 1) };
+      }
+      const limit = c.guestLimit || 10;
+      const ref = fbCol('aiUsage').doc(FB.uid);
+      remaining = await FB.db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const used = snap.exists ? (snap.data().used || 0) : 0;
+        if (used >= limit) throw new Error('You are out of chats. Ask the owner for more.');
+        tx.set(ref, { used: used + 1 }, { merge: true });
+        return limit - used - 1;
+      });
+    }
     const reply = await chatDirect(c, message);
-    const key = 'byteforge.ai.use.' + guestId;
-    const used = parseInt(localStorage.getItem(key) || '0', 10);
-    if (!owner) localStorage.setItem(key, String(used + 1));
-    return { reply: reply, remaining: owner ? Infinity : Math.max(0, (c.guestLimit || 10) - used - 1) };
+    return { reply: reply, remaining: remaining };
   }
 };
 
@@ -883,9 +995,9 @@ function renderKvBanner() {
     const head = $('.admin-head');
     head.parentNode.insertBefore(b, head.nextSibling);
   }
-  b.innerHTML = SERVER
-    ? '<div class="kv-ok"><span class="dot green"></span>Backend connected — codes, tools and logs sync across every device on earth.</div>'
-    : '<div class="kv-warn"><span class="dot red"></span>Local-only mode — no backend detected. Codes and tools live in this browser only. Deploy with Vercel Functions + KV for cross-device keys.</div>';
+  b.innerHTML = FB
+    ? '<div class="kv-ok"><span class="dot green"></span>Firebase connected — codes, tools and logs sync across every device on earth.</div>'
+    : '<div class="kv-warn"><span class="dot red"></span>Local-only mode — Firebase not reachable. ' + esc(FB_ERROR || 'Check the Firebase config.') + '</div>';
 }
 
 /* ---------- AI admin ---------- */
@@ -979,6 +1091,41 @@ $('#toolSave').addEventListener('click', async () => {
   btn.disabled = false;
 });
 $('#toolCancel').addEventListener('click', resetToolForm);
+$('#importLocal').addEventListener('click', async () => {
+  if (!FB) { alert('Firebase is not connected — nothing to import into.'); return; }
+  if (!confirm("Copy this browser's tools and unused codes into Firebase?")) return;
+  const btn = $('#importLocal'); btn.disabled = true;
+  try {
+    let tn = 0, cn = 0;
+    for (const t of DB.get(K.tools, [])) {
+      const id = String(t.id || uid());
+      await fbCol('tools').doc(id).set({
+        name: t.name || '', cat: t.cat || '', url: t.url || '', icon: t.icon || '',
+        desc: t.desc || '', images: Array.isArray(t.images) ? t.images : [],
+        createdAt: t.createdAt || Date.now(), k: KPROOF
+      });
+      tn++;
+    }
+    const ledger = DB.get('byteforge.minted.v1', []);
+    for (const key of Object.keys(DB.get(K.codes, {}))) {
+      const c = DB.get(K.codes, {})[key];
+      if (c && !c.used) {
+        const disp = c.code || key;
+        await fbCol('codes').doc(disp.toUpperCase().replace(/[^A-Z0-9]/g, '')).set({
+          code: disp, name: c.name || 'Guest', createdAt: c.createdAt || Date.now(),
+          expiresAt: c.expiresAt || Date.now(), used: false, usedAt: null, k: KPROOF
+        });
+        if (ledger.indexOf(disp) < 0) ledger.unshift(disp);
+        cn++;
+      }
+    }
+    DB.set('byteforge.minted.v1', ledger.slice(0, 500));
+    await renderToolAdmin(); await renderCodes();
+    await Store.pushLog('—', 'owner', 'imported local data (' + tn + ' tools, ' + cn + ' codes)');
+    alert('Imported ' + tn + ' tools and ' + cn + ' codes into Firebase.');
+  } catch (e) { alert('Import failed: ' + (e.message || e)); }
+  btn.disabled = false;
+});
 
 async function editTool(id) {
   const t = await Store.tool(id);
@@ -1207,7 +1354,7 @@ async function route() {
   else { killSession(); showGate(); }
 }
 (async function boot() {
-  await detectServer();
+  await initBackend();
   await route();
   // heartbeat: keep the 20-min window sliding while the tab is alive
   setInterval(() => { if (sessionAlive()) touchSession(); }, 30000);
