@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() { return request.auth != null; }
+    // Must match OWNER_KEY in index.html. The key ships in the site's JS,
+    // so the gate is the real boundary — these rules stop drive-by writes.
+    function ownerKey() { return 'HardikSri@123'; }
+    function ownerNew() { return authed() && request.resource.data.k == ownerKey(); }
+    function ownerOld() { return authed() && resource.data.k == ownerKey(); }
+
+    // Tools: anyone past the gate can read; only the owner can change.
+    match /tools/{id} {
+      allow read: if authed();
+      allow create, update: if ownerNew();
+      allow delete: if ownerOld();
+    }
+
+    // Codes: single docs can be fetched for redemption, but NEVER listed,
+    // so guests can't enumerate unused codes. The only guest write allowed
+    // is the atomic redeem: used false -> true, nothing else changes.
+    match /codes/{code} {
+      allow get: if authed();
+      allow list: if false;
+      allow create: if ownerNew();
+      allow update: if authed()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt'])
+        && resource.data.used == false
+        && request.resource.data.used == true;
+      allow delete: if ownerOld();
+    }
+
+    // Logs: anyone past the gate can append (redemptions); only owner wipes.
+    match /logs/{id} {
+      allow create, read: if authed();
+      allow update: if false;
+      allow delete: if ownerOld();
+    }
+
+    // AI config + per-browser chat counters.
+    // NOTE: config/ai is readable by anyone past the gate (rules can't hide
+    // single fields) — treat the AI key as visible; use one with limits.
+    match /config/{id} {
+      allow read: if authed();
+      allow create, update: if ownerNew();
+      allow delete: if false;
+    }
+    match /aiUsage/{uid} {
+      allow get: if authed() && request.auth.uid == uid;
+      allow list: if false;
+      allow create: if authed() && request.auth.uid == uid && request.resource.data.used == 1;
+      allow update: if authed() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used'])
+        && request.resource.data.used == resource.data.used + 1;
+      allow delete: if false;
+    }
+  }
+}
