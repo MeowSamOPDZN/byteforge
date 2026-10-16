@@ -70,6 +70,12 @@ input,textarea,select{font-family:inherit}
 .hero p{color:var(--dim);font-size:17px;margin:20px auto 0;max-width:560px;line-height:1.65}
 .hero-rule{width:120px;height:1px;margin:34px auto 0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent)}
 
+/* ---------- category pills ---------- */
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:30px 0 6px}
+.pill{padding:7px 17px;border-radius:999px;border:1px solid var(--border);color:var(--dim);font-size:13.5px;text-decoration:none;transition:all .18s;background:rgba(255,255,255,.02)}
+.pill:hover{color:#fff;border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
+.pill.active{background:#fff;color:#000;border-color:#fff;font-weight:600}
+
 /* ---------- tool cards : glassmorphism ---------- */
 .grid{max-width:1120px;margin:0 auto;padding:26px 24px 90px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 .card{position:relative;border-radius:18px;padding:28px;background:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.02) 55%);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;cursor:pointer;overflow:hidden;text-decoration:none;display:block}
@@ -130,6 +136,9 @@ input,textarea,select{font-family:inherit}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(255,255,255,.4)}
 .field textarea{resize:vertical;min-height:74px}
 .field select option{background:#111}
+.field.chk label{display:flex;align-items:center;gap:10px;cursor:pointer;margin:8px 0 0;font-size:13.5px}
+.field.chk input{width:auto;accent-color:#fff;padding:0}
+.mini-badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0a0a0b;background:#fff;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:2px}
 table{width:100%;border-collapse:collapse;font-size:14px}
 .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.25)}
 th{text-align:left;color:var(--faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.1em;padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
@@ -264,6 +273,7 @@ td.mono,.mono{font-family:var(--mono)}
     <h1>ByteForge</h1>
     <p>A private arsenal of tools — forged in the dark, sharpened for speed. Invite-only, always.</p>
     <div class="hero-rule"></div>
+    <div class="pills" id="pills"></div>
   </header>
 
   <main class="grid" id="grid"></main>
@@ -395,6 +405,7 @@ td.mono,.mono{font-family:var(--mono)}
           <div class="form-grid">
             <div class="field"><label>Name</label><input id="toolName" placeholder="e.g. Pixel Forge"></div>
             <div class="field"><label>Category</label><input id="toolCat" placeholder="e.g. design" list="catList"><datalist id="catList"></datalist></div>
+            <div class="field chk"><label><input type="checkbox" id="toolHidden"> Hidden card <span style="color:var(--faint)">— keep it out of the grid until revealed</span></label></div>
             <div class="field"><label>URL</label><input id="toolUrl" placeholder="https://…"></div>
             <div class="field"><label>Icon <span style="color:var(--faint)">(emoji or one letter)</span></label><input id="toolIcon" placeholder="⚡" maxlength="4"></div>
             <div class="field full"><label>Description</label><textarea id="toolDesc" placeholder="One sharp line about what it does."></textarea></div>
@@ -926,18 +937,26 @@ async function allCategories(tools) {
   return Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
 }
 
-/* Categories stay hidden until explicitly revealed: /?{category}=true.
-   Nothing is shown by default — =false (or absent) keeps a category hidden. */
+/* Normal cards are visible by default. Cards flagged "hidden" surface only when
+   their category is explicitly revealed: /?{category}=true */
 function visibleCategories(cats) {
-  const trues = new Set();
+  const trues = new Set(), falses = new Set();
+  let any = false;
   cats.forEach(c => {
     const slug = slugify(c);
     if (params.has(slug)) {
+      any = true;
       const v = (params.get(slug) || '').toLowerCase();
-      if (!(v === 'false' || v === '0' || v === 'off')) trues.add(c);
+      if (v === 'false' || v === '0' || v === 'off') falses.add(c); else trues.add(c);
     }
   });
-  return trues;
+  if (!any) return new Set(cats);
+  if (trues.size) return trues;
+  return new Set(cats.filter(c => !falses.has(c)));
+}
+function isCatActive(slug) {
+  const v = (params.get(slug) || '').toLowerCase();
+  return params.has(slug) && !(v === 'false' || v === '0' || v === 'off');
 }
 
 async function renderApp() {
@@ -947,8 +966,19 @@ async function renderApp() {
   const cats = Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
   const vis = visibleCategories(cats);
 
-  // cards (categories stay hidden until /?{category}=true reveals them)
-  const shown = tools.filter(t => vis.has(t.cat));
+  // hidden cards surface only when their category is explicitly revealed: /?{category}=true
+  const shown = tools.filter(t => vis.has(t.cat) && (!t.hidden || isCatActive(slugify(t.cat))));
+
+  // pills — only categories with something visible (hidden-only shelves stay invisible)
+  const pillCats = cats.filter(c => tools.some(t => t.cat === c && (!t.hidden || isCatActive(slugify(c)))));
+  const noFilter = !cats.some(c => params.has(slugify(c)));
+  let phtml = '<a class="pill' + (noFilter ? ' active' : '') + '" href="/">All</a>';
+  pillCats.forEach(c => {
+    const slug = slugify(c);
+    phtml += '<a class="pill' + (isCatActive(slug) ? ' active' : '') + '" href="/?' + slug + '=true">' + esc(c) + '</a>';
+  });
+  $('#pills').innerHTML = phtml;
+
   const grid = $('#grid');
   $('#empty').hidden = shown.length > 0;
   grid.innerHTML = shown.map(t => {
@@ -1074,7 +1104,7 @@ async function renderToolAdmin() {
   $('#toolCount').textContent = tools.length ? '· ' + tools.length : '';
   $('#catList').innerHTML = (await allCategories(tools)).map(c => '<option value="' + esc(c) + '">').join('');
   $('#toolRows').innerHTML = tools.length ? tools.map(t =>
-    '<tr><td><strong>' + esc(t.name) + '</strong>' + (t.desc ? '<div style="color:var(--faint);font-size:12.5px;margin-top:3px;max-width:340px">' + esc(t.desc) + '</div>' : '') + '</td>' +
+    '<tr><td><strong>' + esc(t.name) + '</strong>' + (t.hidden ? ' <span class="mini-badge">hidden</span>' : '') + (t.desc ? '<div style="color:var(--faint);font-size:12.5px;margin-top:3px;max-width:340px">' + esc(t.desc) + '</div>' : '') + '</td>' +
     '<td>' + esc(t.cat || '—') + '</td>' +
     '<td style="color:var(--dim);font-size:13px;white-space:nowrap">' + ((t.images && t.images.length) || 0) + ' imgs</td>' +
     '<td class="mono" style="font-size:12.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="' + esc(t.url) + '" target="_blank" rel="noopener" style="color:var(--dim)">' + esc(t.url) + '</a></td>' +
@@ -1090,6 +1120,7 @@ async function renderToolAdmin() {
 function resetToolForm() {
   $('#toolId').value = ''; $('#toolName').value = ''; $('#toolCat').value = '';
   $('#toolUrl').value = ''; $('#toolIcon').value = ''; $('#toolDesc').value = ''; $('#toolImages').value = '';
+  $('#toolHidden').checked = false;
   $('#toolFormTitle').textContent = 'Add a tool';
   $('#toolCancel').hidden = true;
 }
@@ -1107,7 +1138,8 @@ $('#toolSave').addEventListener('click', async () => {
       url: url.match(/^https?:\/\//i) ? url : 'https://' + url,
       icon: $('#toolIcon').value.trim(),
       desc: $('#toolDesc').value.trim(),
-      images: parseImages()
+      images: parseImages(),
+      hidden: $('#toolHidden').checked
     };
     const id = $('#toolId').value;
     if (id) { await Store.updateTool(id, data); await Store.pushLog('—', 'owner', 'edited tool "' + name + '"'); }
@@ -1129,6 +1161,7 @@ $('#importLocal').addEventListener('click', async () => {
       await fbCol('tools').doc(id).set({
         name: t.name || '', cat: t.cat || '', url: t.url || '', icon: t.icon || '',
         desc: t.desc || '', images: Array.isArray(t.images) ? t.images : [],
+        hidden: !!t.hidden,
         createdAt: t.createdAt || Date.now(), k: KPROOF
       });
       tn++;
@@ -1164,6 +1197,7 @@ async function editTool(id) {
   $('#toolIcon').value = t.icon || '';
   $('#toolDesc').value = t.desc || '';
   $('#toolImages').value = (t.images || []).join('\n');
+  $('#toolHidden').checked = !!t.hidden;
   $('#toolFormTitle').textContent = 'Edit tool';
   $('#toolCancel').hidden = false;
   $('#toolName').focus();
