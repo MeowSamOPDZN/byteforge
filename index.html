@@ -70,12 +70,6 @@ input,textarea,select{font-family:inherit}
 .hero p{color:var(--dim);font-size:17px;margin:20px auto 0;max-width:560px;line-height:1.65}
 .hero-rule{width:120px;height:1px;margin:34px auto 0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent)}
 
-/* ---------- category pills ---------- */
-.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:30px 0 6px}
-.pill{padding:7px 17px;border-radius:999px;border:1px solid var(--border);color:var(--dim);font-size:13.5px;text-decoration:none;transition:all .18s;background:rgba(255,255,255,.02)}
-.pill:hover{color:#fff;border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
-.pill.active{background:#fff;color:#000;border-color:#fff;font-weight:600}
-
 /* ---------- tool cards : glassmorphism ---------- */
 .grid{max-width:1120px;margin:0 auto;padding:26px 24px 90px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 .card{position:relative;border-radius:18px;padding:28px;background:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.02) 55%);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;cursor:pointer;overflow:hidden;text-decoration:none;display:block}
@@ -270,7 +264,6 @@ td.mono,.mono{font-family:var(--mono)}
     <h1>ByteForge</h1>
     <p>A private arsenal of tools — forged in the dark, sharpened for speed. Invite-only, always.</p>
     <div class="hero-rule"></div>
-    <div class="pills" id="pills"></div>
   </header>
 
   <main class="grid" id="grid"></main>
@@ -332,6 +325,21 @@ td.mono,.mono{font-family:var(--mono)}
   </footer>
 </div>
 <div class="lightbox" id="lightbox" hidden><img id="lightboxImg" alt=""></div>
+
+<!-- ==================== TOOL ACCESS CODE ==================== -->
+<div class="lightbox" id="toolGate" hidden style="cursor:default">
+  <div class="gate" onclick="event.stopPropagation()">
+    <div class="gate-mark">
+      <img src="logo.png" class="logo-img" alt="ByteForge">
+    </div>
+    <h2>Tool access code</h2>
+    <p class="muted">This tool is locked. Enter the tool access code to open it.</p>
+    <input id="toolGateInput" placeholder="••••••" maxlength="32" autocomplete="off" spellcheck="false">
+    <button class="btn btn-primary" id="toolGateBtn" style="width:100%;margin-top:14px">Open tool</button>
+    <div class="gate-err" id="toolGateErr"></div>
+    <p class="fine">One correct entry unlocks all tools until your session expires (20 minutes away).</p>
+  </div>
+</div>
 
 <!-- ==================== AI WIDGET ==================== -->
 <button class="ai-fab" id="aiFab" hidden title="Chat with ByteForge AI">
@@ -818,6 +826,36 @@ function codeStatus(c) {
    GATE
 ============================================================ */
 function goAdmin() { location.href = '/adminp'; }
+function goUrl(u) { location.href = u; }
+
+/* Per-tool access code — asked when opening any tool card.
+   Case-insensitive (consistent with guest codes); the owner bypasses it. */
+const TOOL_KEY = 'Hardik';
+let pendingToolUrl = null;
+function toolUnlocked() {
+  const s = getSession();
+  return !!(s && sessionAlive() && (s.owner || s.toolKey));
+}
+function openToolGate(url) {
+  pendingToolUrl = url;
+  $('#toolGateErr').textContent = '';
+  $('#toolGateInput').value = '';
+  $('#toolGate').hidden = false;
+  setTimeout(() => $('#toolGateInput').focus(), 60);
+}
+function closeToolGate() { $('#toolGate').hidden = true; pendingToolUrl = null; }
+function submitToolGate() {
+  const v = String($('#toolGateInput').value || '').trim().toUpperCase();
+  if (v === TOOL_KEY.toUpperCase() && v.length > 0) {
+    const s = getSession();
+    if (s) { s.toolKey = true; s.lastActive = Date.now(); DB.set(K.session, s); }
+    const url = pendingToolUrl;
+    closeToolGate();
+    if (url) goUrl(url);
+  } else {
+    $('#toolGateErr').textContent = 'Wrong code. Try again.';
+  }
+}
 function showGate(mode) {
   const ownerMode = mode === 'owner';
   $('#gate').hidden = false;
@@ -888,24 +926,18 @@ async function allCategories(tools) {
   return Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
 }
 
+/* Categories stay hidden until explicitly revealed: /?{category}=true.
+   Nothing is shown by default — =false (or absent) keeps a category hidden. */
 function visibleCategories(cats) {
-  const trues = new Set(), falses = new Set();
-  let any = false;
+  const trues = new Set();
   cats.forEach(c => {
     const slug = slugify(c);
     if (params.has(slug)) {
-      any = true;
       const v = (params.get(slug) || '').toLowerCase();
-      if (v === 'false' || v === '0' || v === 'off') falses.add(c); else trues.add(c);
+      if (!(v === 'false' || v === '0' || v === 'off')) trues.add(c);
     }
   });
-  if (!any) return new Set(cats);
-  if (trues.size) return trues;
-  return new Set(cats.filter(c => !falses.has(c)));
-}
-function isCatActive(slug) {
-  const v = (params.get(slug) || '').toLowerCase();
-  return params.has(slug) && !(v === 'false' || v === '0' || v === 'off');
+  return trues;
 }
 
 async function renderApp() {
@@ -915,17 +947,7 @@ async function renderApp() {
   const cats = Array.from(new Set(tools.map(t => t.cat).filter(Boolean)));
   const vis = visibleCategories(cats);
 
-  // pills
-  const pills = $('#pills');
-  const noFilter = !cats.some(c => params.has(slugify(c)));
-  let html = '<a class="pill' + (noFilter ? ' active' : '') + '" href="/">All</a>';
-  cats.forEach(c => {
-    const slug = slugify(c);
-    html += '<a class="pill' + (isCatActive(slug) ? ' active' : '') + '" href="/?' + slug + '=true">' + esc(c) + '</a>';
-  });
-  pills.innerHTML = html;
-
-  // cards
+  // cards (categories stay hidden until /?{category}=true reveals them)
   const shown = tools.filter(t => vis.has(t.cat));
   const grid = $('#grid');
   $('#empty').hidden = shown.length > 0;
@@ -934,8 +956,7 @@ async function renderApp() {
     const cover = (t.images && t.images[0]) ? '<div class="card-cover"><img src="' + esc(t.images[0]) + '" alt="" loading="lazy"></div>' : '';
     const imgCount = (t.images && t.images.length > 1) ? '<span class="card-imgs">' + t.images.length + ' photos</span>' : '';
     return '<a class="card" href="' + toolURL(t.id) + '">' + cover +
-      '<div class="card-top"><div class="card-icon">' + icon + '</div>' +
-      (t.cat ? '<span class="card-cat">' + esc(t.cat) + '</span>' : '') + '</div>' +
+      '<div class="card-top"><div class="card-icon">' + icon + '</div></div>' +
       '<h3>' + esc(t.name) + '</h3>' +
       (t.desc ? '<p>' + esc(t.desc) + '</p>' : '') +
       '<span class="card-link">View details ' + imgCount + ' <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>' +
@@ -947,6 +968,12 @@ async function renderApp() {
     card.addEventListener('pointermove', e => {
       const r = card.getBoundingClientRect();
       card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+    });
+    // tool access code gate
+    card.addEventListener('click', e => {
+      if (toolUnlocked()) return;
+      e.preventDefault();
+      openToolGate(card.getAttribute('href'));
     });
   });
 }
@@ -1265,6 +1292,9 @@ async function showTool(id) {
 }
 function openLightbox(src) { $('#lightboxImg').src = src; $('#lightbox').hidden = false; }
 $('#lightbox').addEventListener('click', () => { $('#lightbox').hidden = true; });
+$('#toolGateBtn').addEventListener('click', submitToolGate);
+$('#toolGateInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitToolGate(); });
+$('#toolGate').addEventListener('click', e => { if (e.target.id === 'toolGate') closeToolGate(); });
 $('#tdpCopy').addEventListener('click', function () { copyText(location.href, this); });
 
 /* ============================================================
@@ -1347,6 +1377,13 @@ async function route() {
   const tid = currentToolId();
   if (tid) {
     if (!sessionAlive()) { killSession(); showGate(); return; }
+    if (!toolUnlocked()) {
+      $('#gate').hidden = true; $('#app').hidden = true; $('#admin').hidden = true;
+      const tz = $('#tool'); if (tz) tz.hidden = true;
+      document.title = 'ByteForge — Locked tool';
+      openToolGate(toolURL(tid));
+      return;
+    }
     await showTool(tid);
     return;
   }
