@@ -931,6 +931,15 @@ async function showApp() {
 function toolURL(id) {
   return location.protocol.indexOf('http') === 0 ? '/tool/' + id : '#/tool/' + id;
 }
+/* Tool pages never linger in the address bar: if the browser/tab is closed on
+   a tool page and opened again later, the plain home page (unhidden
+   categories) loads instead of the tool. */
+function forgetToolURL() {
+  if (location.hash.indexOf('#/tool/') === 0 || /^\/tool\/[\w-]+\/?$/.test(location.pathname)) {
+    history.replaceState(null, '', '/' + location.search);
+  }
+}
+let tdpId = null;
 
 async function allCategories(tools) {
   tools = tools || await Store.tools();
@@ -1291,6 +1300,8 @@ $('#logClear').addEventListener('click', async () => {
    TOOL DETAIL PAGE
 ============================================================ */
 async function showTool(id) {
+  tdpId = id;
+  forgetToolURL();
   $('#gate').hidden = true;
   $('#app').hidden = true;
   $('#admin').hidden = true;
@@ -1329,7 +1340,9 @@ $('#lightbox').addEventListener('click', () => { $('#lightbox').hidden = true; }
 $('#toolGateBtn').addEventListener('click', submitToolGate);
 $('#toolGateInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitToolGate(); });
 $('#toolGate').addEventListener('click', e => { if (e.target.id === 'toolGate') closeToolGate(); });
-$('#tdpCopy').addEventListener('click', function () { copyText(location.href, this); });
+$('#tdpCopy').addEventListener('click', function () {
+  copyText(tdpId ? location.origin + toolURL(tdpId) : location.href, this);
+});
 
 /* ============================================================
    AI WIDGET  [experimental]
@@ -1415,6 +1428,7 @@ async function route() {
       $('#gate').hidden = true; $('#app').hidden = true; $('#admin').hidden = true;
       const tz = $('#tool'); if (tz) tz.hidden = true;
       document.title = 'ByteForge — Locked tool';
+      forgetToolURL();
       openToolGate(toolURL(tid));
       return;
     }
